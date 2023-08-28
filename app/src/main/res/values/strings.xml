@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">TAKWatch</string>
+    <!-- description -->
+    <string name="app_desc">TAK integration with Garmin watches</string>
+</resources>
