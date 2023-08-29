@@ -23,6 +23,8 @@ import com.atakmap.android.cot.detail.CotDetailManager;
 import com.atakmap.android.cotdetails.ExtendedInfoView;
 import com.atakmap.android.ipc.AtakBroadcast;
 import com.atakmap.android.maps.AbstractMapComponent;
+import com.atakmap.android.maps.MapEvent;
+import com.atakmap.android.maps.MapEventDispatcher;
 import com.atakmap.android.maps.MapItem;
 import com.atakmap.android.maps.MapView;
 import com.atakmap.android.maps.PointMapItem;
@@ -43,6 +45,7 @@ import com.garmin.android.connectiq.exception.ServiceUnavailableException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -80,9 +83,62 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 throw new RuntimeException(e);
             }
 
+            view.getMapEventDispatcher().addMapEventListener(MapEvent.ITEM_ADDED,new edl_pointAdded());
+            //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_SCROLL,new edl_areaChange());
+            //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_ZOOM,new edl_areaChange());
+            //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_SCALE,new edl_areaChange());
             isSdkReady = true;
         }
 
+        class edl_pointAdded implements MapEventDispatcher.MapEventDispatchListener {
+                @Override
+                public void onMapEvent(MapEvent event) {
+                    MapItem target = event.getItem();
+                    Log.d(TAG, "EVENT ITEM: " + target.toString());
+                    if (target instanceof PointMapItem) {
+                        String lat = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
+                        String lon = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
+                        String title = target.getTitle();
+                        String type = target.getType();
+                        List<String> msg = Arrays.asList(new String[]{"marker", lat, lon, title, type});
+                        Log.d(TAG, lat + "," + lon + "," + title + ","+ type);
+
+                        if (title != null) {
+                            sendMessageToWatch(msg);
+                        }
+                    }
+
+                }
+        }
+
+        private void syncWatchMapZoom() {
+            //GeoBounds g = view.
+        }
+        class edl_areaChange implements MapEventDispatcher.MapEventDispatchListener  {
+            @Override
+            public void onMapEvent(MapEvent event) {
+
+                Log.d(TAG, "EVENT TYPE: " + event.getType());
+                Log.d(TAG, "EVENT EXTRAS: " + event.getExtras().toString());
+                Log.d(TAG, "EVENT FACTOR: " + event.getScaleFactor());
+//                Log.d(TAG, "EVENT GROUP: " + event.getGroup().getFriendlyName());
+//                if (target instanceof PointMapItem) {
+//                    String lat1 = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
+//                    String lon1 = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
+//                    String lat2 = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
+//                    String lon2 = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
+//                    String title = target.getTitle();
+//                    String type = target.getType();
+//                    List<String> msg = Arrays.asList(new String[]{"maparea", lat1, lon1, lat2, lon2});
+//                    Log.d(TAG, lat + "," + lon + "," + title + ","+ type);
+//
+//                    if (title != null) {
+//                        sendMessageToWatch(msg);
+//                    }
+//                }
+
+            }
+        }
         @Override
         public void onInitializeError(ConnectIQ.IQSdkErrorStatus iqSdkErrorStatus) {
             Log.d(TAG, "Error");
@@ -263,6 +319,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         this.view = view;
         this.preferencesFragment = new HeartRatePreferenceFragment(context);
 
+
+
         ToolsPreferenceFragment
                 .register(
                         new ToolsPreferenceFragment.ToolPreference(
@@ -359,11 +417,26 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 });
 
         setupConnectIQSdk();
+
+
     }
 
     private void setupConnectIQSdk() {
         connectIQ = ConnectIQ.getInstance();
         connectIQ.initialize(view.getContext(), true, connectIQListener);
+    }
+
+
+    private void sendMessageToWatch(List<String> msg) {
+        try {
+            connectIQ.sendMessage(selectedDevice, myApp, msg, (iqDevice, iqApp, iqMessageStatus) -> {
+                Log.d(TAG, "MessageStatus: " + iqMessageStatus);
+            });
+        } catch (InvalidStateException e) {
+            throw new RuntimeException(e);
+        } catch (ServiceUnavailableException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
