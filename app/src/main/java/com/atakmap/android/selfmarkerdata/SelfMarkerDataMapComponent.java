@@ -20,6 +20,8 @@ import com.atakmap.android.contact.ContactLocationView;
 import com.atakmap.android.cot.CotMapComponent;
 import com.atakmap.android.cot.detail.CotDetailHandler;
 import com.atakmap.android.cot.detail.CotDetailManager;
+import com.atakmap.android.cot.importer.CotImporterManager;
+import com.atakmap.android.cot.importer.FriendlyMarkerImporter;
 import com.atakmap.android.cotdetails.ExtendedInfoView;
 import com.atakmap.android.emergency.EmergencyAlertComponent;
 import com.atakmap.android.emergency.tool.EmergencyBeacon;
@@ -31,6 +33,7 @@ import com.atakmap.android.maps.MapEvent;
 import com.atakmap.android.maps.MapEventDispatcher;
 import com.atakmap.android.maps.MapItem;
 import com.atakmap.android.maps.MapView;
+import com.atakmap.android.maps.Marker;
 import com.atakmap.android.maps.PointMapItem;
 import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
@@ -87,7 +90,10 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 throw new RuntimeException(e);
             }
 
-            view.getMapEventDispatcher().addMapEventListener(MapEvent.ITEM_ADDED,new edl_pointAdded());
+            edl_pointAdded edlpA = new edl_pointAdded();
+            view.getMapEventDispatcher().addMapEventListener(MapEvent.ITEM_REFRESH,edlpA);
+            view.getMapEventDispatcher().addMapEventListener(MapEvent.ITEM_PERSIST,edlpA);
+            //view.getMapEventDispatcher().addMapEventListener(new edl_areaChange());
             //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_SCROLL,new edl_areaChange());
             //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_ZOOM,new edl_areaChange());
             //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_SCALE,new edl_areaChange());
@@ -99,18 +105,24 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 public void onMapEvent(MapEvent event) {
                     MapItem target = event.getItem();
                     Log.d(TAG, "EVENT ITEM: " + target.toString());
+                    Log.d(TAG, "UID: " + target.getUID());
+
                     if (target instanceof PointMapItem) {
                         String lat = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
                         String lon = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
                         String title = target.getTitle();
                         String type = target.getType();
-                        List<String> msg = Arrays.asList(new String[]{"marker", lat, lon, title, type});
+                        String uid = target.getUID();
+                        List<String> msg = Arrays.asList(new String[]{"marker", uid, lat, lon, title, type});
+
                         Log.d(TAG, lat + "," + lon + "," + title + ","+ type);
 
                         if (title != null) {
                             sendMessageToWatch(msg);
                         }
                     }
+
+
 
                 }
         }
@@ -123,8 +135,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             public void onMapEvent(MapEvent event) {
 
                 Log.d(TAG, "EVENT TYPE: " + event.getType());
-                Log.d(TAG, "EVENT EXTRAS: " + event.getExtras().toString());
-                Log.d(TAG, "EVENT FACTOR: " + event.getScaleFactor());
+                if (event.getExtras()!=null)
+                    Log.d(TAG, "EVENT EXTRAS: " + event.getExtras().toString());
 //                Log.d(TAG, "EVENT GROUP: " + event.getGroup().getFriendlyName());
 //                if (target instanceof PointMapItem) {
 //                    String lat1 = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
