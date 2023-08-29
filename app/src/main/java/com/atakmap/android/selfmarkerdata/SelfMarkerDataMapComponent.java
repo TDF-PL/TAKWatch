@@ -223,8 +223,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                         List<String> msg = (List<String>) messages.get(0);
                         String type = msg.get(0);
                         switch (type) {
-                            case "hr" :
-                                handleWatchHR(msg);
+                            case "stats" :
+                                handleWatchStats(msg);
                                 break;
                             case "alert" :
                                 handleWatchAlert(msg);
@@ -250,12 +250,10 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 false);
         EmergencyManager.getInstance().setEmergencyOn(true);
     }
-    private void handleWatchHR(List<String> message) {
+    private void handleWatchStats(List<String> message) {
         int heartRate = parseInt((String) message.get(1));
-        Log.d(TAG, "Sending COD message with heart rate: " + heartRate);
-
+        String battery = (String) message.get(2);
         heartBeatsValues.add(heartRate);
-
         int sum = 0;
         int maxHeartRate = 0;
         for (int v : heartBeatsValues) {
@@ -273,7 +271,6 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             timeRange = 60;
             Log.d(TAG, "timeRange value cannot be read from preferences. setting default: " + timeRange + ", error: " + e.getMessage());
         }
-        Log.d(TAG, "timeRange value from preferences: " + timeRange);
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss dd MMM yyyy");
         String nowString = simpleDateFormat.format(new Date());
@@ -282,6 +279,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         cd.setAttribute("maxHeartRate", maxHeartRate + "");
         cd.setAttribute("averageHeartRate", averageHeartRate + "");
         cd.setAttribute("lastUpdated", nowString);
+        cd.setAttribute("watchBattery", battery);
         cd.setAttribute("timeRange", timeRange + "");
 
         if (healthDetail != null) {
@@ -291,7 +289,6 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
         long diffBetweenLastBroadcast = (System.currentTimeMillis() - lastBroadcasted) / 1000;
         if (diffBetweenLastBroadcast > timeRange) {
-            Log.d(TAG, "----------------BROADCAST diff:" + diffBetweenLastBroadcast);
             AtakBroadcast.getInstance().sendBroadcast(
                     new Intent(ReportingRate.REPORT_LOCATION)
                             .putExtra("reason", "detail update for heart rate"));
