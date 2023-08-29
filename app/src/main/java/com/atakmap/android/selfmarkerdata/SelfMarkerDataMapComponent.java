@@ -385,8 +385,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                                     int timeRange = m.getMetaInteger("SelfMarkerDataPlugin.timeRange", -1);
                                     String lastUpdated = m.getMetaString("SelfMarkerDataPlugin.lastUpdated", "Unknown");
 
-                                    if (selectedDevice == null) {
-                                        heartBeatTextField.setText("Device not connected");
+                                    if (maxHeartRate == -1) {
+                                        heartBeatTextField.setText("No data");
                                     } else {
                                         heartBeatTextField.setText(format("Max : %d \nAvg: %d\nInterval: %ds \nLast updated: %s", maxHeartRate, averageHeartRate, timeRange, lastUpdated));
                                     }
@@ -426,7 +426,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                             item.setMetaString("SelfMarkerDataPlugin.lastUpdated", lastUpdatedString);
 
                         } catch (Exception e) {
-                            Log.e(TAG, "Errorek", e);
+                            Log.e(TAG, "Error", e);
                         }
                         return CommsMapComponent.ImportResult.SUCCESS;
                     }
