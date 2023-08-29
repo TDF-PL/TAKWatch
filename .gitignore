@@ -31,3 +31,12 @@ google-services.json
 
 # Android Profiling
 *.hprof
+.takdev/plugin.properties
+app/build.gradle
+app/libs/atak-gradle-takdev.jar
+app/libs/atak-javadoc.jar
+app/libs/main.jar
+app/proguard-gradle.txt
+app/build.gradle
+app/proguard-gradle.txt
+app/build.gradle
