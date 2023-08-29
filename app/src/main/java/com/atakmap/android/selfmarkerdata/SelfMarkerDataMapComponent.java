@@ -21,6 +21,10 @@ import com.atakmap.android.cot.CotMapComponent;
 import com.atakmap.android.cot.detail.CotDetailHandler;
 import com.atakmap.android.cot.detail.CotDetailManager;
 import com.atakmap.android.cotdetails.ExtendedInfoView;
+import com.atakmap.android.emergency.EmergencyAlertComponent;
+import com.atakmap.android.emergency.tool.EmergencyBeacon;
+import com.atakmap.android.emergency.tool.EmergencyManager;
+import com.atakmap.android.emergency.tool.EmergencyType;
 import com.atakmap.android.ipc.AtakBroadcast;
 import com.atakmap.android.maps.AbstractMapComponent;
 import com.atakmap.android.maps.MapEvent;
@@ -196,66 +200,28 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 }
             });
 
-            Context viewContext = this.view.getContext();
-
             Log.d(TAG, "Before registerForAppEvents");
 
             connectIQ.registerForAppEvents(selectedDevice, myApp, new ConnectIQ.IQApplicationEventListener() {
                 @Override
                 public void onMessageReceived(IQDevice iqDevice, IQApp iqApp, List<Object> messages, ConnectIQ.IQMessageStatus iqMessageStatus) {
-                    StringBuilder builder = new StringBuilder();
+                    Log.d(TAG, "onMessageReceived: " + messages);
 
                     if (messages.size() > 0) {
-                        for (Object o : messages) {
-                            builder.append(o.toString());
+                        List<String> msg = (List<String>) messages.get(0);
+                        String type = msg.get(0);
+                        switch (type) {
+                            case "hr" :
+                                handleWatchHR(msg);
+                                break;
+                            case "alert" :
+                                handleWatchAlert(msg);
+                                break;
+                            default:
+                                break;
                         }
-                        String heartRateString = builder.toString();
-                        int heartRate = parseInt(heartRateString);
-                        Log.d(TAG, "Sending COD message with heart rate: " + heartRate);
 
-                        heartBeatsValues.add(heartRate);
 
-                        int sum = 0;
-                        int maxHeartRate = 0;
-                        for (int v : heartBeatsValues) {
-                            sum += v;
-                            maxHeartRate = Math.max(maxHeartRate, v);
-                        }
-                        int averageHeartRate = sum / heartBeatsValues.size();
-
-                        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(viewContext);
-                        int timeRange;
-                        try {
-                            String timeRangeString = sharedPref.getString(PREFERENCE_KEY_TIMERANGE, "60");
-                            timeRange = parseInt(timeRangeString);
-                        } catch (Exception e) {
-                            timeRange = 60;
-                            Log.d(TAG, "timeRange value cannot be read from preferences. setting default: " + timeRange + ", error: " + e.getMessage());
-                        }
-                        Log.d(TAG, "timeRange value from preferences: " + timeRange);
-
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss dd MMM yyyy");
-                        String nowString = simpleDateFormat.format(new Date());
-
-                        CotDetail cd = new CotDetail("health");
-                        cd.setAttribute("maxHeartRate", maxHeartRate + "");
-                        cd.setAttribute("averageHeartRate", averageHeartRate + "");
-                        cd.setAttribute("lastUpdated", nowString);
-                        cd.setAttribute("timeRange", timeRange + "");
-
-                        if (healthDetail != null) {
-                            healthDetail.toItemMetadata(view.getSelfMarker(), null, cd);
-                        }
-                        CotMapComponent.getInstance().addAdditionalDetail(cd.getElementName(), cd);
-
-                        long diffBetweenLastBroadcast = (System.currentTimeMillis() - lastBroadcasted) / 1000;
-                        if (diffBetweenLastBroadcast > timeRange) {
-                            Log.d(TAG, "----------------BROADCAST diff:" + diffBetweenLastBroadcast);
-                            AtakBroadcast.getInstance().sendBroadcast(
-                                    new Intent(ReportingRate.REPORT_LOCATION)
-                                            .putExtra("reason", "detail update for heart rate"));
-                            lastBroadcasted = System.currentTimeMillis();
-                        }
                     }
                 }
             });
@@ -263,6 +229,62 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             throw new RuntimeException(e);
         }
 
+    }
+    private void handleWatchAlert(List<String> message) {
+        Log.d(TAG, "User triggered ALERT!");
+        EmergencyManager.getInstance()
+                .setEmergencyType(EmergencyType.TroopsInContact);
+        EmergencyManager.getInstance().initiateRepeat(EmergencyType.TroopsInContact,
+                false);
+        EmergencyManager.getInstance().setEmergencyOn(true);
+    }
+    private void handleWatchHR(List<String> message) {
+        int heartRate = parseInt((String) message.get(1));
+        Log.d(TAG, "Sending COD message with heart rate: " + heartRate);
+
+        heartBeatsValues.add(heartRate);
+
+        int sum = 0;
+        int maxHeartRate = 0;
+        for (int v : heartBeatsValues) {
+            sum += v;
+            maxHeartRate = Math.max(maxHeartRate, v);
+        }
+        int averageHeartRate = sum / heartBeatsValues.size();
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this.view.getContext());
+        int timeRange;
+        try {
+            String timeRangeString = sharedPref.getString(PREFERENCE_KEY_TIMERANGE, "60");
+            timeRange = parseInt(timeRangeString);
+        } catch (Exception e) {
+            timeRange = 60;
+            Log.d(TAG, "timeRange value cannot be read from preferences. setting default: " + timeRange + ", error: " + e.getMessage());
+        }
+        Log.d(TAG, "timeRange value from preferences: " + timeRange);
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss dd MMM yyyy");
+        String nowString = simpleDateFormat.format(new Date());
+
+        CotDetail cd = new CotDetail("health");
+        cd.setAttribute("maxHeartRate", maxHeartRate + "");
+        cd.setAttribute("averageHeartRate", averageHeartRate + "");
+        cd.setAttribute("lastUpdated", nowString);
+        cd.setAttribute("timeRange", timeRange + "");
+
+        if (healthDetail != null) {
+            healthDetail.toItemMetadata(view.getSelfMarker(), null, cd);
+        }
+        CotMapComponent.getInstance().addAdditionalDetail(cd.getElementName(), cd);
+
+        long diffBetweenLastBroadcast = (System.currentTimeMillis() - lastBroadcasted) / 1000;
+        if (diffBetweenLastBroadcast > timeRange) {
+            Log.d(TAG, "----------------BROADCAST diff:" + diffBetweenLastBroadcast);
+            AtakBroadcast.getInstance().sendBroadcast(
+                    new Intent(ReportingRate.REPORT_LOCATION)
+                            .putExtra("reason", "detail update for heart rate"));
+            lastBroadcasted = System.currentTimeMillis();
+        }
     }
 
     private void loadDevice() {
