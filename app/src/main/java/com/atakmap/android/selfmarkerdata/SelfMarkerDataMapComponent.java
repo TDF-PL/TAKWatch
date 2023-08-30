@@ -77,6 +77,69 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
     private CotDetailHandler healthDetail;
 
+    private MED_Listener med_listener;
+
+    private boolean sent = false;
+
+    private List<String> supportedTypes = Arrays.asList(new String[]{
+            "a-f-G",
+            "a-n-G",
+            "a-h-G",
+            "a-u-G",
+            "b-m-p-s-p-i",
+            "a-f-G-U-C"
+    });
+    class MED_Listener implements MapEventDispatcher.MapEventDispatchListener {
+        @Override
+        public void onMapEvent(MapEvent event) {
+            MapItem target = event.getItem();
+            String targetType = target.getType();
+            String eventType = event.getType();
+            String uid = target.getUID();
+            Log.d(TAG, "EVENT ITEM: " + target.toString());
+            Log.d(TAG, "EVENT UID: " + uid);
+            Log.d(TAG, "EVENT TYPE: " + eventType);
+
+            switch (eventType) {
+                case MapEvent.ITEM_SHARED:
+                case MapEvent.ITEM_PERSIST: {
+                    if (!supportedTypes.contains(targetType)) {
+                        Log.d(TAG, "Type " + targetType + " not supported. Skipping.");
+                    }
+                    if (target instanceof PointMapItem) {
+                        String lat = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
+                        String lon = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
+                        String title = target.getTitle();
+                        List<String> msg = Arrays.asList(new String[]{"marker", uid, lat, lon, title, targetType});
+
+                        if (title != null) {
+                            sendMessageToWatch(msg);
+                        }
+                    }
+                    break;
+                }
+
+                case MapEvent.ITEM_REMOVED: {
+                    List<String> msg = Arrays.asList(new String[]{"remove", uid});
+                    sendMessageToWatch(msg);
+                    break;
+                }
+
+                default:
+                    break;
+
+            }
+
+
+
+
+        }
+    }
+
+    private void drawVectorOnWatch ( String uid ) {
+        List<String> msg = Arrays.asList(new String[]{"vector", uid});
+        sendMessageToWatch(msg);
+    }
 
     private ConnectIQ.ConnectIQListener connectIQListener = new ConnectIQ.ConnectIQListener() {
         @Override
@@ -90,71 +153,16 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 throw new RuntimeException(e);
             }
 
-            edl_pointAdded edlpA = new edl_pointAdded();
-            view.getMapEventDispatcher().addMapEventListener(MapEvent.ITEM_REFRESH,edlpA);
-            view.getMapEventDispatcher().addMapEventListener(MapEvent.ITEM_PERSIST,edlpA);
-            //view.getMapEventDispatcher().addMapEventListener(new edl_areaChange());
-            //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_SCROLL,new edl_areaChange());
-            //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_ZOOM,new edl_areaChange());
-            //view.getMapEventDispatcher().addMapEventListener(MapEvent.MAP_SCALE,new edl_areaChange());
+            med_listener = new MED_Listener();
+            view.getMapEventDispatcher().addMapEventListener(med_listener);
+
             isSdkReady = true;
-        }
-
-        class edl_pointAdded implements MapEventDispatcher.MapEventDispatchListener {
-                @Override
-                public void onMapEvent(MapEvent event) {
-                    MapItem target = event.getItem();
-                    Log.d(TAG, "EVENT ITEM: " + target.toString());
-                    Log.d(TAG, "UID: " + target.getUID());
-
-                    if (target instanceof PointMapItem) {
-                        String lat = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
-                        String lon = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
-                        String title = target.getTitle();
-                        String type = target.getType();
-                        String uid = target.getUID();
-                        List<String> msg = Arrays.asList(new String[]{"marker", uid, lat, lon, title, type});
-
-                        Log.d(TAG, lat + "," + lon + "," + title + ","+ type);
-
-                        if (title != null) {
-                            sendMessageToWatch(msg);
-                        }
-                    }
-
-
-
-                }
         }
 
         private void syncWatchMapZoom() {
             //GeoBounds g = view.
         }
-        class edl_areaChange implements MapEventDispatcher.MapEventDispatchListener  {
-            @Override
-            public void onMapEvent(MapEvent event) {
 
-                Log.d(TAG, "EVENT TYPE: " + event.getType());
-                if (event.getExtras()!=null)
-                    Log.d(TAG, "EVENT EXTRAS: " + event.getExtras().toString());
-//                Log.d(TAG, "EVENT GROUP: " + event.getGroup().getFriendlyName());
-//                if (target instanceof PointMapItem) {
-//                    String lat1 = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
-//                    String lon1 = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
-//                    String lat2 = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
-//                    String lon2 = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
-//                    String title = target.getTitle();
-//                    String type = target.getType();
-//                    List<String> msg = Arrays.asList(new String[]{"maparea", lat1, lon1, lat2, lon2});
-//                    Log.d(TAG, lat + "," + lon + "," + title + ","+ type);
-//
-//                    if (title != null) {
-//                        sendMessageToWatch(msg);
-//                    }
-//                }
-
-            }
-        }
         @Override
         public void onInitializeError(ConnectIQ.IQSdkErrorStatus iqSdkErrorStatus) {
             Log.d(TAG, "Error");
@@ -189,7 +197,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                     Log.d(TAG, "openApplication " + iqDevice.getFriendlyName() + ":" + iqApp.getApplicationId() + ":" + iqOpenApplicationStatus);
                 });
             } catch (Exception e) {
-                Log.e(TAG, "nie dobrze", e);
+                Log.e(TAG, "Error", e);
             }
 
 
@@ -475,6 +483,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         Log.d(TAG, "onDestroyImpl");
 
         CotDetailManager.getInstance().unregisterHandler(healthDetail);
+        view.getMapEventDispatcher().removeMapEventListener(med_listener);
         ContactLocationView.unregister(extendedselfinfo);
         try {
             connectIQ.unregisterAllForEvents();
