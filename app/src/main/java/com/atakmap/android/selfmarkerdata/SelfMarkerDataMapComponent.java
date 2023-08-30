@@ -26,6 +26,7 @@ import com.atakmap.android.maps.MapView;
 import com.atakmap.android.maps.PointMapItem;
 import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
+import com.atakmap.android.selfmarkerdata.radialmenu.RadialMenuDetailsExtender;
 import com.atakmap.app.preferences.ToolsPreferenceFragment;
 import com.atakmap.comms.CommsMapComponent;
 import com.atakmap.comms.ReportingRate;
@@ -355,7 +356,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         this.view = view;
         this.preferencesFragment = new HeartRatePreferenceFragment(context);
 
-
+        RadialMenuDetailsExtender.extend(context, view.getContext(), (mapWidget, event) -> Log.d(TAG, "BUTTON PRESSED"));
 
         ToolsPreferenceFragment
                 .register(
