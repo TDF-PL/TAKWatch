@@ -15,7 +15,6 @@
 -renamesourcefileattribute SourceFile
 -keepattributes SourceFile,LineNumberTable
 
--applymapping <atak.proguard.mapping>
 -repackageclasses atakplugin.selfmarkerdata
 
 -keepattributes *Annotation*

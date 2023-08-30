@@ -1,12 +1,6 @@
 
 package com.atakmap.android.selfmarkerdata;
 
-import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME;
-import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_TIMERANGE;
-import static com.garmin.android.connectiq.IQApp.IQAppStatus.INSTALLED;
-import static java.lang.Integer.parseInt;
-import static java.lang.String.format;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,11 +14,7 @@ import com.atakmap.android.contact.ContactLocationView;
 import com.atakmap.android.cot.CotMapComponent;
 import com.atakmap.android.cot.detail.CotDetailHandler;
 import com.atakmap.android.cot.detail.CotDetailManager;
-import com.atakmap.android.cot.importer.CotImporterManager;
-import com.atakmap.android.cot.importer.FriendlyMarkerImporter;
 import com.atakmap.android.cotdetails.ExtendedInfoView;
-import com.atakmap.android.emergency.EmergencyAlertComponent;
-import com.atakmap.android.emergency.tool.EmergencyBeacon;
 import com.atakmap.android.emergency.tool.EmergencyManager;
 import com.atakmap.android.emergency.tool.EmergencyType;
 import com.atakmap.android.ipc.AtakBroadcast;
@@ -33,7 +23,6 @@ import com.atakmap.android.maps.MapEvent;
 import com.atakmap.android.maps.MapEventDispatcher;
 import com.atakmap.android.maps.MapItem;
 import com.atakmap.android.maps.MapView;
-import com.atakmap.android.maps.Marker;
 import com.atakmap.android.maps.PointMapItem;
 import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
@@ -49,12 +38,17 @@ import com.garmin.android.connectiq.IQDevice;
 import com.garmin.android.connectiq.exception.InvalidStateException;
 import com.garmin.android.connectiq.exception.ServiceUnavailableException;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
+import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME;
+import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_TIMERANGE;
+import static com.garmin.android.connectiq.IQApp.IQAppStatus.INSTALLED;
+import static java.lang.Integer.parseInt;
+import static java.lang.String.format;
 
 
 public class SelfMarkerDataMapComponent extends AbstractMapComponent {
@@ -471,6 +465,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
     private void sendMessageToWatch(List<String> msg) {
         try {
+            Log.d(TAG, "sendMessageToWatch: " + String.join(", ", msg));
             connectIQ.sendMessage(selectedDevice, myApp, msg, (iqDevice, iqApp, iqMessageStatus) -> {
                 Log.d(TAG, "MessageStatus: " + iqMessageStatus);
             });
