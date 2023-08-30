@@ -93,6 +93,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         @Override
         public void onMapEvent(MapEvent event) {
             MapItem target = event.getItem();
+            if (target == null) return;
+
             String targetType = target.getType();
             String eventType = event.getType();
             String uid = target.getUID();
@@ -102,7 +104,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
             switch (eventType) {
                 case MapEvent.ITEM_SHARED:
-                case MapEvent.ITEM_PERSIST: {
+                case MapEvent.ITEM_PERSIST:
+                case MapEvent.ITEM_REFRESH: {
                     if (!supportedTypes.contains(targetType)) {
                         Log.d(TAG, "Type " + targetType + " not supported. Skipping.");
                     }
