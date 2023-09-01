@@ -32,7 +32,6 @@ import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
 import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
 import com.atakmap.android.selfmarkerdata.radialmenu.RadialMenuDetailsExtender;
-import com.atakmap.android.widgets.MapWidget;
 import com.atakmap.app.preferences.ToolsPreferenceFragment;
 import com.atakmap.comms.CommsMapComponent;
 import com.atakmap.comms.ReportingRate;
