@@ -41,7 +41,7 @@ buildscript {
     ext.takrepoUrl = getProperty(urlKey, 'https://localhost/')
     ext.takrepoUser = getProperty('takrepo.user', 'invalid')
     ext.takrepoPassword = getProperty('takrepo.password', 'invalid')
-    ext.takdevPlugin = getProperty('takdev.plugin', "${rootDir}/app/libs/atak-gradle-takdev.jar")
+    ext.takdevPlugin = getProperty('takdev.plugin', "${rootDir}/../../atak-gradle-takdev.jar")
 
     repositories {
         google()
@@ -165,7 +165,7 @@ android {
     productFlavors {
         supportedFlavors.each { flav ->
             "${flav.name}" {
-                getIsDefault().set(flav.name.equals("${flav.default}".toString()))
+                getIsDefault().set(flav.name.equals("${flav.default}"))
                 dimension "application"
 
                 // retain existing application identifiers for civ and mil
@@ -192,6 +192,8 @@ android {
 
     packagingOptions {
         exclude 'META-INF/INDEX.LIST'
+		
+		jniLibs.useLegacyPackaging true							   
     }
 
     sourceSets {
@@ -221,7 +223,7 @@ android {
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 26
+        targetSdkVersion 33
 
         def runTasks = gradle.startParameter.taskNames
         if(runTasks.toString().contains('bundle')) {

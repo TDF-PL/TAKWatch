@@ -1,7 +1,9 @@
 
 package com.atakmap.android.selfmarkerdata;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -10,6 +12,8 @@ import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.atakmap.android.chat.ChatManagerMapComponent;
+import com.atakmap.android.contact.Contact;
 import com.atakmap.android.contact.ContactLocationView;
 import com.atakmap.android.cot.CotMapComponent;
 import com.atakmap.android.cot.detail.CotDetailHandler;
@@ -26,7 +30,9 @@ import com.atakmap.android.maps.MapView;
 import com.atakmap.android.maps.PointMapItem;
 import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
+import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
 import com.atakmap.android.selfmarkerdata.radialmenu.RadialMenuDetailsExtender;
+import com.atakmap.android.widgets.MapWidget;
 import com.atakmap.app.preferences.ToolsPreferenceFragment;
 import com.atakmap.comms.CommsMapComponent;
 import com.atakmap.comms.ReportingRate;
@@ -43,7 +49,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+
+import gov.tak.api.widgets.IMapWidget;
+import gov.tak.platform.ui.MotionEvent;
 
 import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME;
 import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_TIMERANGE;
@@ -76,14 +86,6 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
     private boolean sent = false;
 
-    private List<String> supportedTypes = Arrays.asList(new String[]{
-            "a-f-G",
-            "a-n-G",
-            "a-h-G",
-            "a-u-G",
-            "b-m-p-s-p-i",
-            "a-f-G-U-C"
-    });
     class MED_Listener implements MapEventDispatcher.MapEventDispatchListener {
         @Override
         public void onMapEvent(MapEvent event) {
@@ -101,7 +103,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 case MapEvent.ITEM_SHARED:
                 case MapEvent.ITEM_PERSIST:
                 case MapEvent.ITEM_REFRESH: {
-                    if (!supportedTypes.contains(targetType)) {
+                    if (!TAKWatchConst.supportedTypes.contains(targetType)) {
                         Log.d(TAG, "Type " + targetType + " not supported. Skipping.");
                     }
                     if (target instanceof PointMapItem) {
@@ -219,34 +221,35 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             });
 
             Log.d(TAG, "Before registerForAppEvents");
+            startIQListener();
 
-            connectIQ.registerForAppEvents(selectedDevice, myApp, new ConnectIQ.IQApplicationEventListener() {
-                @Override
-                public void onMessageReceived(IQDevice iqDevice, IQApp iqApp, List<Object> messages, ConnectIQ.IQMessageStatus iqMessageStatus) {
-                    Log.d(TAG, "onMessageReceived: " + messages);
-
-                    if (messages.size() > 0) {
-                        List<String> msg = (List<String>) messages.get(0);
-                        String type = msg.get(0);
-                        switch (type) {
-                            case "stats" :
-                                handleWatchStats(msg);
-                                break;
-                            case "alert" :
-                                handleWatchAlert(msg);
-                                break;
-                            default:
-                                break;
-                        }
-
-
-                    }
-                }
-            });
         } catch (InvalidStateException | ServiceUnavailableException e) {
             throw new RuntimeException(e);
         }
 
+    }
+    private void sendMessage(List<String> msg) {
+        List<Contact> c = new ArrayList<Contact>();
+        c.add(ChatManagerMapComponent.getChatBroadcastContact());
+        ChatManagerMapComponent.getInstance().sendMessage(msg.get(1), c);
+    }
+
+    private void sendAllMarkersToWatch() {
+        Iterator it = view.getRootGroup().getAllItems().iterator();
+        while (it.hasNext()) {
+            MapItem mi = (MapItem)it.next();
+            if (!(mi instanceof PointMapItem)) continue;
+
+            String targetType = mi.getType();
+            if (TAKWatchConst.supportedTypes.contains(targetType)) {
+                String lat = String.valueOf(((PointMapItem)mi).getPoint().getLatitude());
+                String lon = String.valueOf(((PointMapItem)mi).getPoint().getLongitude());
+                String title = mi.getTitle();
+                String uid = mi.getUID();
+                List<String> msg = Arrays.asList(new String[]{"marker", uid, lat, lon, title, targetType});
+                sendMessageToWatch(msg);
+            }
+        }
     }
     private void handleWatchAlert(List<String> message) {
         Log.d(TAG, "User triggered ALERT!");
@@ -320,10 +323,42 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
             initializeDevice(devices, sharedPref);
         } catch (Exception e) {
-            Log.e(TAG, "Błąd", e);
+            Log.e(TAG, "Error", e);
         }
     }
 
+    private void startIQListener() throws InvalidStateException {
+        Log.d(TAG, "startIQListener()");
+        connectIQ.registerForAppEvents(selectedDevice, myApp, new ConnectIQ.IQApplicationEventListener() {
+            @Override
+            public void onMessageReceived(IQDevice iqDevice, IQApp iqApp, List<Object> messages, ConnectIQ.IQMessageStatus iqMessageStatus) {
+                Log.d(TAG, "onMessageReceived: " + messages);
+                if (iqMessageStatus != ConnectIQ.IQMessageStatus.SUCCESS) return;
+                if (messages.size() > 0) {
+                    List<String> msg = (List<String>) messages.get(0);
+                    String type = msg.get(0);
+                    switch (type) {
+                        case "stats" :
+                            handleWatchStats(msg);
+                            break;
+                        case "alert" :
+                            handleWatchAlert(msg);
+                            break;
+                        case "ready" :
+                            sendAllMarkersToWatch();
+                            break;
+                        case "message" :
+                            sendMessage(msg);
+                            break;
+                        default:
+                            break;
+                    }
+
+
+                }
+            }
+        });
+    }
     private void initializeDevice(List<IQDevice> devices, SharedPreferences sharedPref) {
         String deviceNameFromPreferences = sharedPref.getString(PREFERENCE_KEY_DEVICE_NAME, null);
         Log.d(TAG, "Value from preferences: " + deviceNameFromPreferences);
@@ -351,12 +386,42 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         }
     }
 
+    class TAKWatchPressListener implements IMapWidget.OnPressListener {
+        @Override
+        public void onMapWidgetPress(IMapWidget iMapWidget, MotionEvent motionEvent) {
+            Log.d(TAG, "onMapWidgetPress");
+            Log.d(TAG, iMapWidget.getAbsolutePath());
+            AlertDialog.Builder alertBuilder = new AlertDialog.Builder(view.getContext());
+            alertBuilder.setTitle("TAK Watch ");
+            alertBuilder.setMessage("Please select the desired action.");
+            final AlertDialog alertDialog = alertBuilder.create();
+            alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Navigate on watch", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    //drawVectorOnWatch();
+                    //MapItem mi = view.getContext().
+                    Log.d(TAG, String.valueOf(i));
+                }
+            });
+            alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Save on watch",new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                }
+            });
+            alertDialog.setCancelable(true);
+
+            alertDialog.show();
+
+        }
+    }
     public void onCreate(final Context context, Intent intent, final MapView view) {
         context.setTheme(R.style.ATAKPluginTheme);
         this.view = view;
         this.preferencesFragment = new HeartRatePreferenceFragment(context);
 
-        RadialMenuDetailsExtender.extend(context, view.getContext(), (mapWidget, event) -> Log.d(TAG, "BUTTON PRESSED"));
+
+        RadialMenuDetailsExtender.extend(context, view.getContext(), new TAKWatchPressListener());
 
         ToolsPreferenceFragment
                 .register(

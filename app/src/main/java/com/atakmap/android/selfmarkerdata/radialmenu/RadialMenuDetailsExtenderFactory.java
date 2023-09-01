@@ -13,6 +13,7 @@ import com.atakmap.android.menu.MapMenuWidget;
 import com.atakmap.android.menu.MenuMapAdapter;
 import com.atakmap.android.menu.MenuResourceFactory;
 import com.atakmap.android.menu.PluginMenuParser;
+import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
 import com.atakmap.android.widgets.MapWidget;
 import com.atakmap.android.widgets.WidgetIcon;
 
@@ -24,7 +25,6 @@ public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
 
     private static final String TAG = "SelfMarkerMenuFactory";
     private static final String BUTTON_ASSET_NAME = "takwatch-radial-menu-btn.png";
-    public static final String WAYPOINT_ITEM_TYPE = "b-m-p-w";
 
     private final Context pluginContext;
     private final Context mapContext;
@@ -77,7 +77,7 @@ public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
     }
 
     private boolean isWaypointType(MapItem mapItem) {
-        return mapItem.getType().equals(WAYPOINT_ITEM_TYPE);
+        return TAKWatchConst.supportedTypes.contains(mapItem.getType());
     }
 
     private MapMenuButtonWidget createWatchButton(MapMenuWidget menuWidget, Context pluginContext, Context mapContext) {
