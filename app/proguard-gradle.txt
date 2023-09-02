@@ -1,10 +1,15 @@
+######################################################################
+## Skip down to the 'User Section'
+## Messing with any items in the 'System Section' will void the warranty
+######################################################################
 
-# Do not strip any method/class that is annotated with @DontObfuscate
--keep,allowobfuscation @interface gov.tak.api.annotation.DontObfuscate
--keep @gov.tak.api.annotation.DontObfuscate class * {*;}
--keepclassmembers class * {
-    @gov.tak.api.annotation.DontObfuscate *;
-}
+
+######################################################################
+######################################################################
+## System Section
+######################################################################
+######################################################################
+
 
 -dontskipnonpubliclibraryclasses
 -dontshrink
@@ -15,7 +20,7 @@
 -renamesourcefileattribute SourceFile
 -keepattributes SourceFile,LineNumberTable
 
--repackageclasses atakplugin.selfmarkerdata
+-applymapping <atak.proguard.mapping>
 
 -keepattributes *Annotation*
 -keepattributes Signature, InnerClasses
@@ -60,4 +65,41 @@
 
 # overcome an existing bug in the gradle subsystem (3.5.x)
 -keep class module-info
+
+-keep,allowobfuscation @interface gov.tak.api.annotation.DontObfuscate
+
+# Do not strip any method/class that is annotated with @DontObfuscate
+-keep @gov.tak.api.annotation.DontObfuscate class * {*;}
+-keepclassmembers class * {
+    @gov.tak.api.annotation.DontObfuscate *;
+}
+
+
+######################################################################
+## Messing with any settings above this line will void the Warranty
+######################################################################
+
+
+
+######################################################################
+######################################################################
+## User Section
+######################################################################
+######################################################################
+
+
+######################################################################
+## Please change PluginTemplate to accurately reflect the name of your
+## plugin.  This will help get bug reports to your development group.
+######################################################################
+
+-repackageclasses selfMarker.TAKWatc
+
+
+######################################################################
+## below you can add any rules specific to your plugin limited to
+## dontwarn and keep directives
+######################################################################
+
+-dontwarn androidx.viewpager.widget.ViewPager$SavedState
 
