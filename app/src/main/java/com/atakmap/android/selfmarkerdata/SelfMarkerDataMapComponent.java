@@ -85,11 +85,14 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
     private boolean sent = false;
 
+    private MapItem _target;
+
     class MED_Listener implements MapEventDispatcher.MapEventDispatchListener {
         @Override
         public void onMapEvent(MapEvent event) {
             MapItem target = event.getItem();
             if (target == null) return;
+
 
             String targetType = target.getType();
             String eventType = event.getType();
@@ -104,16 +107,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 case MapEvent.ITEM_REFRESH: {
                     if (!TAKWatchConst.supportedTypes.contains(targetType)) {
                         Log.d(TAG, "Type " + targetType + " not supported. Skipping.");
-                    }
-                    if (target instanceof PointMapItem) {
-                        String lat = String.valueOf(((PointMapItem)target).getPoint().getLatitude());
-                        String lon = String.valueOf(((PointMapItem)target).getPoint().getLongitude());
-                        String title = target.getTitle();
-                        List<String> msg = Arrays.asList(new String[]{"marker", uid, lat, lon, title, targetType});
-
-                        if (title != null) {
-                            sendMessageToWatch(msg);
-                        }
+                    } else {
+                        sendMarkerToWatch(target);
                     }
                     break;
                 }
@@ -124,20 +119,44 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                     break;
                 }
 
+                case MapEvent.ITEM_PRESS: {
+                    _target = target;
+                    break;
+                }
+
                 default:
                     break;
 
             }
 
-
-
-
         }
     }
 
+    private void sendMarkerToWatch (MapItem target) {
+        if (target instanceof PointMapItem) {
+            String lat = String.valueOf(((PointMapItem) target).getPoint().getLatitude());
+            String lon = String.valueOf(((PointMapItem) target).getPoint().getLongitude());
+            String title = target.getTitle();
+            List<String> msg = Arrays.asList(new String[]{"marker", target.getUID(), lat, lon, title, target.getType()});
+
+            if (title != null) {
+                sendMessageToWatch(msg);
+            }
+        }
+    }
     private void drawVectorOnWatch ( String uid ) {
         List<String> msg = Arrays.asList(new String[]{"vector", uid});
         sendMessageToWatch(msg);
+    }
+
+    private void storeWaypointOnWatch ( MapItem target ) {
+        if (target instanceof PointMapItem) {
+            String lat = String.valueOf(((PointMapItem) target).getPoint().getLatitude());
+            String lon = String.valueOf(((PointMapItem) target).getPoint().getLongitude());
+            String title = target.getTitle();
+            List<String> msg = Arrays.asList(new String[]{"waypoint", lat, lon, title});
+            sendMessageToWatch(msg);
+        }
     }
 
     private ConnectIQ.ConnectIQListener connectIQListener = new ConnectIQ.ConnectIQListener() {
@@ -227,10 +246,10 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         }
 
     }
-    private void sendMessage(List<String> msg) {
+    private void sendTAKChatMessage(String msg) {
         List<Contact> c = new ArrayList<Contact>();
         c.add(ChatManagerMapComponent.getChatBroadcastContact());
-        ChatManagerMapComponent.getInstance().sendMessage(msg.get(1), c);
+        ChatManagerMapComponent.getInstance().sendMessage(msg, c);
     }
 
     private void sendAllMarkersToWatch() {
@@ -241,12 +260,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
             String targetType = mi.getType();
             if (TAKWatchConst.supportedTypes.contains(targetType)) {
-                String lat = String.valueOf(((PointMapItem)mi).getPoint().getLatitude());
-                String lon = String.valueOf(((PointMapItem)mi).getPoint().getLongitude());
-                String title = mi.getTitle();
-                String uid = mi.getUID();
-                List<String> msg = Arrays.asList(new String[]{"marker", uid, lat, lon, title, targetType});
-                sendMessageToWatch(msg);
+               sendMarkerToWatch(mi);
             }
         }
     }
@@ -332,7 +346,6 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             @Override
             public void onMessageReceived(IQDevice iqDevice, IQApp iqApp, List<Object> messages, ConnectIQ.IQMessageStatus iqMessageStatus) {
                 Log.d(TAG, "onMessageReceived: " + messages);
-                if (iqMessageStatus != ConnectIQ.IQMessageStatus.SUCCESS) return;
                 if (messages.size() > 0) {
                     List<String> msg = (List<String>) messages.get(0);
                     String type = msg.get(0);
@@ -347,7 +360,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                             sendAllMarkersToWatch();
                             break;
                         case "message" :
-                            sendMessage(msg);
+                            String m = msg.get(1);
+                            sendTAKChatMessage(m);
                             break;
                         default:
                             break;
@@ -385,7 +399,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         }
     }
 
-    class TAKWatchPressListener implements IMapWidget.OnPressListener {
+     class TAKWatchPressListener implements IMapWidget.OnPressListener {
         @Override
         public void onMapWidgetPress(IMapWidget iMapWidget, MotionEvent motionEvent) {
             Log.d(TAG, "onMapWidgetPress");
@@ -397,14 +411,16 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Navigate on watch", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    //drawVectorOnWatch();
-                    //MapItem mi = view.getContext().
-                    Log.d(TAG, String.valueOf(i));
-                }
-            });
+                    MapItem mi = view.getMapItem(_target.getUID());
+                    sendMarkerToWatch(mi);
+                    drawVectorOnWatch(_target.getUID());
+
+            }});
             alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Save on watch",new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
+                    MapItem mi = view.getMapItem(_target.getUID());
+                    storeWaypointOnWatch(mi);
 
                 }
             });
