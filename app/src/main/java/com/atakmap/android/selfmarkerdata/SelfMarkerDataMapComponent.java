@@ -38,6 +38,7 @@ import com.atakmap.comms.ReportingRate;
 import com.atakmap.coremap.cot.event.CotDetail;
 import com.atakmap.coremap.cot.event.CotEvent;
 import com.atakmap.coremap.filesystem.FileSystemUtils;
+import com.atakmap.coremap.maps.coords.GeoPoint;
 import com.garmin.android.connectiq.ConnectIQ;
 import com.garmin.android.connectiq.IQApp;
 import com.garmin.android.connectiq.IQDevice;
@@ -253,6 +254,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
     }
 
     private void sendAllMarkersToWatch() {
+        GeoPoint me = view.getSelfMarker().getPoint();
         Iterator it = view.getRootGroup().getAllItems().iterator();
         while (it.hasNext()) {
             MapItem mi = (MapItem)it.next();
@@ -260,7 +262,9 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
             String targetType = mi.getType();
             if (TAKWatchConst.supportedTypes.contains(targetType)) {
-               sendMarkerToWatch(mi);
+                double distance = me.distanceTo(((PointMapItem) mi).getPoint());
+                // if (distance < confdistance)
+                sendMarkerToWatch(mi);
             }
         }
     }
