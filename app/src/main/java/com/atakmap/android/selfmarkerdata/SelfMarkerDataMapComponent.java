@@ -134,6 +134,11 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
     }
 
     private void sendMarkerToWatch (MapItem target) {
+        GeoPoint me = view.getSelfMarker().getPoint();
+        double distance = me.distanceTo(((PointMapItem) target).getPoint());
+        // TODO: Add configuration slider for max sync distance
+        // if (distance > configuredDistance) return;
+
         if (target instanceof PointMapItem) {
             String lat = String.valueOf(((PointMapItem) target).getPoint().getLatitude());
             String lon = String.valueOf(((PointMapItem) target).getPoint().getLongitude());
@@ -254,7 +259,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
     }
 
     private void sendAllMarkersToWatch() {
-        GeoPoint me = view.getSelfMarker().getPoint();
+
         Iterator it = view.getRootGroup().getAllItems().iterator();
         while (it.hasNext()) {
             MapItem mi = (MapItem)it.next();
@@ -262,8 +267,6 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
             String targetType = mi.getType();
             if (TAKWatchConst.supportedTypes.contains(targetType)) {
-                double distance = me.distanceTo(((PointMapItem) mi).getPoint());
-                // if (distance < confdistance)
                 sendMarkerToWatch(mi);
             }
         }
