@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.atakmap.android.chat.ChatManagerMapComponent;
+import com.atakmap.android.chat.GeoChatService;
 import com.atakmap.android.contact.Contact;
 import com.atakmap.android.contact.ContactLocationView;
 import com.atakmap.android.cot.CotMapComponent;
@@ -101,6 +102,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             Log.d(TAG, "EVENT ITEM: " + target.toString());
             Log.d(TAG, "EVENT UID: " + uid);
             Log.d(TAG, "EVENT TYPE: " + eventType);
+            Log.d(TAG, "TARGET TYPE: " + targetType);
 
             switch (eventType) {
                 case MapEvent.ITEM_SHARED:
@@ -115,8 +117,13 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 }
 
                 case MapEvent.ITEM_REMOVED: {
-                    List<String> msg = Arrays.asList(new String[]{"remove", uid});
-                    sendMessageToWatch(msg);
+                    if (!TAKWatchConst.supportedTypes.contains(targetType)) {
+                        Log.d(TAG, "Type " + targetType + " not supported. Skipping.");
+                    } else {
+                        List<String> msg = Arrays.asList(new String[]{"remove", uid});
+                        sendMessageToWatch(msg);
+                    }
+
                     break;
                 }
 
@@ -144,7 +151,6 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             String lon = String.valueOf(((PointMapItem) target).getPoint().getLongitude());
             String title = target.getTitle();
             List<String> msg = Arrays.asList(new String[]{"marker", target.getUID(), lat, lon, title, target.getType()});
-
             if (title != null) {
                 sendMessageToWatch(msg);
             }
@@ -256,6 +262,9 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         List<Contact> c = new ArrayList<Contact>();
         c.add(ChatManagerMapComponent.getChatBroadcastContact());
         ChatManagerMapComponent.getInstance().sendMessage(msg, c);
+        com.atakmap.android.ipc.AtakBroadcast.getInstance().sendBroadcast(
+                new android.content.Intent("com.atakmap.android.chat.HISTORY_UPDATE"));
+
     }
 
     private void sendAllMarkersToWatch() {
@@ -553,7 +562,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
     private void sendMessageToWatch(List<String> msg) {
         try {
-            Log.d(TAG, "sendMessageToWatch: " + String.join(", ", msg));
+            Log.d(TAG, "sendMessageToWatch: " + msg.toString());
             connectIQ.sendMessage(selectedDevice, myApp, msg, (iqDevice, iqApp, iqMessageStatus) -> {
                 Log.d(TAG, "MessageStatus: " + iqMessageStatus);
             });
