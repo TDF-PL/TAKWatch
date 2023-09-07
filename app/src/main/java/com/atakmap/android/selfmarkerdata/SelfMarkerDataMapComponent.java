@@ -171,22 +171,24 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         }
     }
 
-    private ConnectIQ.ConnectIQListener connectIQListener = new ConnectIQ.ConnectIQListener() {
+    private final ConnectIQ.ConnectIQListener connectIQListener = new ConnectIQ.ConnectIQListener() {
         @Override
         public void onSdkReady() {
             Log.d(TAG, "onSdkReady");
-            loadDevice();
-            try {
-                loadAppMessages();
-            } catch (Exception e) {
-                Log.e(TAG, "Load app failed!", e);
-                throw new RuntimeException(e);
+            if (!isSdkReady) {
+                Log.d(TAG, "SDK not ready - initializing");
+                loadDevice();
+                try {
+                    loadAppMessages();
+                } catch (Exception e) {
+                    Log.e(TAG, "Load app failed!", e);
+                    throw new RuntimeException(e);
+                }
+
+                med_listener = new MED_Listener();
+                view.getMapEventDispatcher().addMapEventListener(med_listener);
+                isSdkReady = true;
             }
-
-            med_listener = new MED_Listener();
-            view.getMapEventDispatcher().addMapEventListener(med_listener);
-
-            isSdkReady = true;
         }
 
         private void syncWatchMapZoom() {
