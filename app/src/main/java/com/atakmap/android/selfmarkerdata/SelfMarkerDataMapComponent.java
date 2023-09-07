@@ -177,13 +177,9 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             Log.d(TAG, "onSdkReady");
             if (!isSdkReady) {
                 Log.d(TAG, "SDK not ready - initializing");
+
                 loadDevice();
-                try {
-                    loadAppMessages();
-                } catch (Exception e) {
-                    Log.e(TAG, "Load app failed!", e);
-                    throw new RuntimeException(e);
-                }
+                loadAppMessages();
 
                 med_listener = new MED_Listener();
                 view.getMapEventDispatcher().addMapEventListener(med_listener);
