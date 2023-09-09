@@ -29,6 +29,7 @@ import com.atakmap.android.maps.MapEventDispatcher;
 import com.atakmap.android.maps.MapItem;
 import com.atakmap.android.maps.MapView;
 import com.atakmap.android.maps.PointMapItem;
+import com.atakmap.android.selfmarkerdata.debouncer.MessageDebouncer;
 import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
 import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
@@ -88,6 +89,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
     private boolean sent = false;
 
     private MapItem _target;
+
+    private final MessageDebouncer messageDebouncer = new MessageDebouncer();
 
     class MED_Listener implements MapEventDispatcher.MapEventDispatchListener {
         @Override
@@ -360,6 +363,11 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             @Override
             public void onMessageReceived(IQDevice iqDevice, IQApp iqApp, List<Object> messages, ConnectIQ.IQMessageStatus iqMessageStatus) {
                 Log.d(TAG, "onMessageReceived: " + messages);
+                if (messageDebouncer.alreadyHandled(messages)) {
+                    return;
+                }
+                messageDebouncer.remember(messages);
+
                 if (messages.size() > 0) {
                     List<String> msg = (List<String>) messages.get(0);
                     String type = msg.get(0);
