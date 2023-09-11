@@ -43,11 +43,19 @@ public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
         for (MapWidget child : menuWidget.getChildWidgets()) {
             if (child instanceof MapMenuButtonWidget) {
                 MapMenuButtonWidget mapMenuButtonWidget = (MapMenuButtonWidget) child;
-                if (isWaypointType(mapItem) && hasSubmenu(mapMenuButtonWidget) && isDetailsButton(mapMenuButtonWidget)) {
-                    MapMenuWidget detailsSubmenu = mapMenuButtonWidget.getSubmenuWidget();
-                    MapMenuButtonWidget buttonWidget = createWatchButton(detailsSubmenu, pluginContext, mapContext);
-                    buttonWidget.addOnPressListener(onPressHandler);
-                    detailsSubmenu.addWidget(buttonWidget);
+                if (isWaypointType(mapItem) && isDetailsButton(mapMenuButtonWidget)) {
+                    if (hasSubmenu(mapMenuButtonWidget)) {
+                        MapMenuWidget detailsSubmenu = mapMenuButtonWidget.getSubmenuWidget();
+                        MapMenuButtonWidget buttonWidget = createWatchButton(detailsSubmenu, pluginContext, mapContext);
+                        buttonWidget.addOnPressListener(onPressHandler);
+                        detailsSubmenu.addWidget(buttonWidget);
+                    } else {
+                        MapMenuWidget submenu = new MapMenuWidget();
+                        MapMenuButtonWidget buttonWidget = createWatchButton(pluginContext, mapContext);
+                        submenu.addWidget(buttonWidget);
+                        buttonWidget.addOnPressListener(onPressHandler);
+                        mapMenuButtonWidget.setSubmenuWidget(submenu);
+                    }
                 }
             }
         }
@@ -96,6 +104,21 @@ public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
         buttonWeight /= menuWidget.getChildCount();
         buttonWidget.setLayoutWeight(buttonWeight);
 
+        setButtonIcon(pluginContext, buttonWidget);
+
+        return buttonWidget;
+    }
+
+    private MapMenuButtonWidget createWatchButton(Context pluginContext, Context mapContext) {
+        MapMenuButtonWidget buttonWidget = new MapMenuButtonWidget(mapContext);
+        buttonWidget.setOrientation(buttonWidget.getOrientationAngle(), 130);
+
+        setButtonIcon(pluginContext, buttonWidget);
+
+        return buttonWidget;
+    }
+
+    private static void setButtonIcon(Context pluginContext, MapMenuButtonWidget buttonWidget) {
         String asset = PluginMenuParser.getItem(pluginContext, BUTTON_ASSET_NAME);
         final MapDataRef mapDataRef = MapDataRef.parseUri(asset);
 
@@ -106,7 +129,5 @@ public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
                 .build();
 
         buttonWidget.setIcon(widgetIcon);
-
-        return buttonWidget;
     }
 }
