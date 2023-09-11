@@ -4,4 +4,23 @@
     <string name="app_name">TAKWatch</string>
     <!-- description -->
     <string name="app_desc">TAK integration with Garmin watches</string>
+
+    <string-array name="SyncRangeEntries">
+        <item>500m</item>
+        <item>1km</item>
+        <item>2km</item>
+        <item>5km</item>
+        <item>10km</item>
+        <item>Unlimited (not recommended)</item>
+    </string-array>
+
+    <string-array name="SyncRangeValues">
+        <item>500</item>
+        <item>1000</item>
+        <item>2000</item>
+        <item>5000</item>
+        <item>10000</item>
+        <item>0</item>
+    </string-array>
+
 </resources>
