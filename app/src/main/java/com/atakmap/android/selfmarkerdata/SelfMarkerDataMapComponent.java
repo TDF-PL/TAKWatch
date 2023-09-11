@@ -2,18 +2,20 @@
 package com.atakmap.android.selfmarkerdata;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.atakmap.android.chat.ChatManagerMapComponent;
-import com.atakmap.android.chat.GeoChatService;
 import com.atakmap.android.contact.Contact;
 import com.atakmap.android.contact.ContactLocationView;
 import com.atakmap.android.cot.CotMapComponent;
@@ -29,10 +31,13 @@ import com.atakmap.android.maps.MapEventDispatcher;
 import com.atakmap.android.maps.MapItem;
 import com.atakmap.android.maps.MapView;
 import com.atakmap.android.maps.PointMapItem;
+import com.atakmap.android.preference.AtakPreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
 import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
 import com.atakmap.android.selfmarkerdata.radialmenu.RadialMenuDetailsExtender;
+import com.atakmap.app.preferences.PreferenceManagementFragment;
+import com.atakmap.app.preferences.PreferenceSearchDialog;
 import com.atakmap.app.preferences.ToolsPreferenceFragment;
 import com.atakmap.comms.CommsMapComponent;
 import com.atakmap.comms.ReportingRate;
@@ -53,6 +58,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import gov.tak.api.util.Disposable;
 import gov.tak.api.widgets.IMapWidget;
 import gov.tak.platform.ui.MotionEvent;
 
@@ -67,6 +73,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
     private static final String TAG = "SelfMarkerDataMapCompon";
     private static final String COMM_WATCH_ID = "a3421feed289106a538cb9547ab12095";
+    public static final String OPEN_PREFERENCES_ACTION = "com.atakmap.android.selfmarkerdata.plugin.openPreferences";
 
     private final List<Integer> heartBeatsValues = new ArrayList<>();
 
@@ -88,6 +95,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
     private boolean sent = false;
 
     private MapItem _target;
+
+    private BroadcastReceiver openPreferencesReceiver;
 
     class MED_Listener implements MapEventDispatcher.MapEventDispatchListener {
         @Override
@@ -449,7 +458,6 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         this.view = view;
         this.preferencesFragment = new HeartRatePreferenceFragment(context);
 
-
         RadialMenuDetailsExtender.extend(context, view.getContext(), new TAKWatchPressListener());
 
         ToolsPreferenceFragment
@@ -460,6 +468,14 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                                 "TAKWatchPreferences",
                                 context.getResources().getDrawable(R.drawable.takwatch, null),
                                 preferencesFragment));
+
+        openPreferencesReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d(TAG, "onReceive in openPreferencesReceiver, handling: " + intent.getAction());
+            }
+        };
+        AtakBroadcast.getInstance().registerReceiver(openPreferencesReceiver, new AtakBroadcast.DocumentedIntentFilter(OPEN_PREFERENCES_ACTION));
 
         ContactLocationView.register(
                 extendedselfinfo = new ContactLocationView.ExtendedSelfInfoFactory() {
@@ -584,6 +600,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         } catch (InvalidStateException e) {
             // SDK already closed no worries
         }
+
+        AtakBroadcast.getInstance().unregisterReceiver(openPreferencesReceiver);
     }
 
 
