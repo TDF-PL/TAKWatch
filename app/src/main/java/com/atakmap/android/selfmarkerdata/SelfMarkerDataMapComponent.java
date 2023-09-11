@@ -63,7 +63,9 @@ import gov.tak.api.util.Disposable;
 import gov.tak.api.widgets.IMapWidget;
 import gov.tak.platform.ui.MotionEvent;
 
+import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_AUTOLAUNCH;
 import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME;
+import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_SYNC_RANGE;
 import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_TIMERANGE;
 import static com.garmin.android.connectiq.IQApp.IQAppStatus.INSTALLED;
 import static java.lang.Integer.parseInt;
@@ -100,6 +102,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
     private BroadcastReceiver openPreferencesReceiver;
 
     private final MessageDebouncer messageDebouncer = new MessageDebouncer();
+    private SharedPreferences sharedPref;
 
     class MED_Listener implements MapEventDispatcher.MapEventDispatchListener {
         @Override
@@ -153,12 +156,13 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
     }
 
     private void sendMarkerToWatch (MapItem target) {
-        GeoPoint me = view.getSelfMarker().getPoint();
-        double distance = me.distanceTo(((PointMapItem) target).getPoint());
-        // TODO: Add configuration slider for max sync distance
-        // if (distance > configuredDistance) return;
-
         if (target instanceof PointMapItem) {
+            GeoPoint me = view.getSelfMarker().getPoint();
+            double distance = me.distanceTo(((PointMapItem) target).getPoint());
+            Integer configuredDistance = Integer.valueOf(sharedPref.getString(PREFERENCE_KEY_SYNC_RANGE, "1000"));
+
+            if (configuredDistance != 0 && distance > configuredDistance) return;
+
             String lat = String.valueOf(((PointMapItem) target).getPoint().getLatitude());
             String lon = String.valueOf(((PointMapItem) target).getPoint().getLongitude());
             String title = target.getTitle();
@@ -232,12 +236,16 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
             myApp = new IQApp(COMM_WATCH_ID);
 
-            try {
-                connectIQ.openApplication(selectedDevice, myApp, (iqDevice, iqApp, iqOpenApplicationStatus) -> {
-                    Log.d(TAG, "openApplication " + iqDevice.getFriendlyName() + ":" + iqApp.getApplicationId() + ":" + iqOpenApplicationStatus);
-                });
-            } catch (Exception e) {
-                Log.e(TAG, "Error", e);
+            Boolean openApp = sharedPref.getBoolean(PREFERENCE_KEY_AUTOLAUNCH, false);
+
+            if (openApp) {
+                try {
+                    connectIQ.openApplication(selectedDevice, myApp, (iqDevice, iqApp, iqOpenApplicationStatus) -> {
+                        Log.d(TAG, "openApplication " + iqDevice.getFriendlyName() + ":" + iqApp.getApplicationId() + ":" + iqOpenApplicationStatus);
+                    });
+                } catch (Exception e) {
+                    Log.e(TAG, "Error", e);
+                }
             }
 
 
@@ -310,7 +318,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         }
         int averageHeartRate = sum / heartBeatsValues.size();
 
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this.view.getContext());
+        
         int timeRange;
         try {
             String timeRangeString = sharedPref.getString(PREFERENCE_KEY_TIMERANGE, "60");
@@ -466,6 +474,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         this.view = view;
         this.preferencesFragment = new HeartRatePreferenceFragment(context);
 
+        this.sharedPref = PreferenceManager.getDefaultSharedPreferences(this.view.getContext());
+        
         RadialMenuDetailsExtender.extend(context, view.getContext(), new TAKWatchPressListener());
 
         ToolsPreferenceFragment

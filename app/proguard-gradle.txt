@@ -93,7 +93,7 @@
 ## plugin.  This will help get bug reports to your development group.
 ######################################################################
 
--repackageclasses selfMarker.TAKWatc
+-repackageclasses selfMarker.TAKWatch
 
 
 ######################################################################
