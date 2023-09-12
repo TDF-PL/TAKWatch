@@ -1,6 +1,7 @@
 
 package com.atakmap.android.selfmarkerdata;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -37,6 +38,7 @@ import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
 import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
 import com.atakmap.android.selfmarkerdata.radialmenu.RadialMenuDetailsExtender;
+import com.atakmap.app.SettingsActivity;
 import com.atakmap.app.preferences.PreferenceManagementFragment;
 import com.atakmap.app.preferences.PreferenceSearchDialog;
 import com.atakmap.app.preferences.ToolsPreferenceFragment;
@@ -490,7 +492,11 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         openPreferencesReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d(TAG, "onReceive in openPreferencesReceiver, handling: " + intent.getAction());
+                Intent prefIntent = new Intent(MapView.getMapView().getContext(),
+                        SettingsActivity.class);
+                prefIntent.putExtra("toolkey", "TAKWatchPreferences");
+                ((Activity) MapView.getMapView().getContext()).startActivityForResult(prefIntent, 0);
+
             }
         };
         AtakBroadcast.getInstance().registerReceiver(openPreferencesReceiver, new AtakBroadcast.DocumentedIntentFilter(OPEN_PREFERENCES_ACTION));
