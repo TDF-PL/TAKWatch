@@ -17,6 +17,8 @@ import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
 import com.atakmap.android.widgets.MapWidget;
 import com.atakmap.android.widgets.WidgetIcon;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.io.IOException;
 
 import gov.tak.api.widgets.IMapWidget;
@@ -77,7 +79,10 @@ public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
     }
 
     private boolean isDetailsButton(MapMenuButtonWidget mapMenuButtonWidget) {
-        return mapMenuButtonWidget.getWidgetIcon().getImageUri(0).equals("asset://icons/details.png");
+        String imageUri = mapMenuButtonWidget.getWidgetIcon().getImageUri(0);
+        if (StringUtils.isEmpty(imageUri)) return false;
+
+        return imageUri.equals("asset://icons/details.png");
     }
 
     private boolean hasSubmenu(MapMenuButtonWidget mapMenuButtonWidget) {
