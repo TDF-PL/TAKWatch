@@ -465,6 +465,9 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         public void onMapWidgetPress(IMapWidget iMapWidget, MotionEvent motionEvent) {
             Log.d(TAG, "onMapWidgetPress");
             Log.d(TAG, iMapWidget.getAbsolutePath());
+
+            if (_target == null) return;
+
             MapItem mi = view.getMapItem(_target.getUID());
             AlertDialog.Builder alertBuilder = new AlertDialog.Builder(view.getContext());
             alertBuilder.setTitle("TAK Watch ");
@@ -484,7 +487,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             }});
 
             if (!mi.getType().equals("b-m-r"))
-                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "Save on watch",new DialogInterface.OnClickListener() {
+                alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Save on watch",new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     MapItem mi = view.getMapItem(_target.getUID());
