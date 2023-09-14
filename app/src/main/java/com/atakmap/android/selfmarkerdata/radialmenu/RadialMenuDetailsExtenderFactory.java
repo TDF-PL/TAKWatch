@@ -20,6 +20,8 @@ import com.atakmap.android.widgets.WidgetIcon;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import gov.tak.api.widgets.IMapWidget;
 
@@ -32,10 +34,15 @@ public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
     private final Context mapContext;
     private final IMapWidget.OnPressListener onPressHandler;
 
+    private ArrayList<String> supportedTypes;
+
     public RadialMenuDetailsExtenderFactory(Context pluginContext, Context mapContext, IMapWidget.OnPressListener onPressHandler) {
         this.pluginContext = pluginContext;
         this.mapContext = mapContext;
         this.onPressHandler = onPressHandler;
+        this.supportedTypes = new ArrayList<String>();
+        this.supportedTypes.addAll(TAKWatchConst.supportedTypes);
+        supportedTypes.add("b-m-r");
     }
 
     @Override
@@ -90,7 +97,8 @@ public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
     }
 
     private boolean isWaypointType(MapItem mapItem) {
-        return TAKWatchConst.supportedTypes.contains(mapItem.getType());
+        Log.d(TAG, "isWaypointType: " + mapItem.getType());
+        return supportedTypes.contains(mapItem.getType());
     }
 
     private MapMenuButtonWidget createWatchButton(MapMenuWidget menuWidget, Context pluginContext, Context mapContext) {

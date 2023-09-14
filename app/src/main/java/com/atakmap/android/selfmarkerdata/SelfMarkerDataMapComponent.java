@@ -33,6 +33,8 @@ import com.atakmap.android.maps.MapItem;
 import com.atakmap.android.maps.MapView;
 import com.atakmap.android.maps.PointMapItem;
 import com.atakmap.android.preference.AtakPreferenceFragment;
+import com.atakmap.android.routes.Route;
+import com.atakmap.android.routes.RouteMapReceiver;
 import com.atakmap.android.selfmarkerdata.debouncer.MessageDebouncer;
 import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
 import com.atakmap.android.selfmarkerdata.plugin.R;
@@ -57,6 +59,7 @@ import com.garmin.android.connectiq.exception.ServiceUnavailableException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -137,7 +140,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                     if (!TAKWatchConst.supportedTypes.contains(targetType)) {
                         Log.d(TAG, "Type " + targetType + " not supported. Skipping.");
                     } else {
-                        List<String> msg = Arrays.asList(new String[]{"remove", uid});
+                        List<Object> msg = Arrays.asList(new String[]{"remove", uid});
                         sendMessageToWatch(msg);
                     }
 
@@ -157,6 +160,21 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         }
     }
 
+    private void sendRouteToWatch(Route r) {
+
+        List<Object> msg = new ArrayList<Object>();
+        Collections.addAll(msg, new String[]{"route", r.getUID()});
+
+        for (int c=0; c< r.getPointMapItemArray().length; c++) {
+            Double lat = r.getPointMapItemArray()[c].getPoint().getLatitude();
+            Double lon = r.getPointMapItemArray()[c].getPoint().getLongitude();
+            msg.add(lat +";" + lon);
+        }
+
+
+        sendMessageToWatch(msg);
+
+    }
     private void sendMarkerToWatch (MapItem target) {
         if (target instanceof PointMapItem) {
             GeoPoint me = view.getSelfMarker().getPoint();
@@ -168,14 +186,14 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             String lat = String.valueOf(((PointMapItem) target).getPoint().getLatitude());
             String lon = String.valueOf(((PointMapItem) target).getPoint().getLongitude());
             String title = target.getTitle();
-            List<String> msg = Arrays.asList(new String[]{"marker", target.getUID(), lat, lon, title, target.getType()});
+            List<Object> msg = Arrays.asList(new Object[]{"marker", target.getUID(), lat, lon, title, target.getType()});
             if (title != null) {
                 sendMessageToWatch(msg);
             }
         }
     }
     private void drawVectorOnWatch ( String uid ) {
-        List<String> msg = Arrays.asList(new String[]{"vector", uid});
+        List<Object> msg = Arrays.asList(new Object[]{"vector", uid});
         sendMessageToWatch(msg);
     }
 
@@ -184,7 +202,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             String lat = String.valueOf(((PointMapItem) target).getPoint().getLatitude());
             String lon = String.valueOf(((PointMapItem) target).getPoint().getLongitude());
             String title = target.getTitle();
-            List<String> msg = Arrays.asList(new String[]{"waypoint", lat, lon, title});
+            List<Object> msg = Arrays.asList(new Object[]{"waypoint", lat, lon, title});
             sendMessageToWatch(msg);
         }
     }
@@ -382,7 +400,10 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             @Override
             public void onMessageReceived(IQDevice iqDevice, IQApp iqApp, List<Object> messages, ConnectIQ.IQMessageStatus iqMessageStatus) {
                 Log.d(TAG, "onMessageReceived: " + messages);
+
                 if (messageDebouncer.alreadyHandled(messages)) {
+                    Log.d(TAG, "onMessageReceived: " + messages);
+s
                     return;
                 }
                 messageDebouncer.remember(messages);
@@ -453,9 +474,13 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     MapItem mi = view.getMapItem(_target.getUID());
-                    sendMarkerToWatch(mi);
-                    drawVectorOnWatch(_target.getUID());
-
+                    if (mi.getType().equals("b-m-r")) {
+                        Route r = (Route)mi;
+                        sendRouteToWatch(r);
+                    } else {
+                        sendMarkerToWatch(mi);
+                        drawVectorOnWatch(_target.getUID());
+                    }
             }});
             alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Save on watch",new DialogInterface.OnClickListener() {
                 @Override
@@ -598,7 +623,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
     }
 
 
-    private void sendMessageToWatch(List<String> msg) {
+    private void sendMessageToWatch(List<Object> msg) {
         try {
             Log.d(TAG, "sendMessageToWatch: " + msg.toString());
             connectIQ.sendMessage(selectedDevice, myApp, msg, (iqDevice, iqApp, iqMessageStatus) -> {
