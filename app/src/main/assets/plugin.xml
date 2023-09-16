@@ -4,7 +4,7 @@
 
     <extension
         type="gov.tak.api.plugin.IPlugin"
-        impl="com.atakmap.android.selfmarkerdata.plugin.PluginTemplateLifecycle"
+        impl="pl.tdf.atak.TAKWatch.plugin.PluginTemplateLifecycle"
         singleton="true" />
 
 </plugin>

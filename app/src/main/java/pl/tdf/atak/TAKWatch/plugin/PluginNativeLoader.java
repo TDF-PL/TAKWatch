@@ -1,5 +1,5 @@
 
-package com.atakmap.android.selfmarkerdata.plugin;
+package pl.tdf.atak.TAKWatch.plugin;
 
 import java.io.File;
 import android.content.Context;

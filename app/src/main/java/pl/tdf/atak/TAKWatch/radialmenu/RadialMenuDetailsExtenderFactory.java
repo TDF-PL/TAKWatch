@@ -1,4 +1,4 @@
-package com.atakmap.android.selfmarkerdata.radialmenu;
+package pl.tdf.atak.TAKWatch.radialmenu;
 
 import android.content.Context;
 import android.util.Log;
@@ -13,7 +13,7 @@ import com.atakmap.android.menu.MapMenuWidget;
 import com.atakmap.android.menu.MenuMapAdapter;
 import com.atakmap.android.menu.MenuResourceFactory;
 import com.atakmap.android.menu.PluginMenuParser;
-import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
+import pl.tdf.atak.TAKWatch.plugin.TAKWatchConst;
 import com.atakmap.android.widgets.MapWidget;
 import com.atakmap.android.widgets.WidgetIcon;
 
@@ -21,7 +21,6 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import gov.tak.api.widgets.IMapWidget;
 
