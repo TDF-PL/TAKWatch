@@ -1,4 +1,4 @@
-package com.atakmap.android.selfmarkerdata.radialmenu;
+package pl.tdf.atak.TAKWatch.radialmenu;
 
 import android.content.Context;
 

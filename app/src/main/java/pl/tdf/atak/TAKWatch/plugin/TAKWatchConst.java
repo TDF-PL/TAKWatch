@@ -1,4 +1,4 @@
-package com.atakmap.android.selfmarkerdata.plugin;
+package pl.tdf.atak.TAKWatch.plugin;
 
 import java.util.Arrays;
 import java.util.List;

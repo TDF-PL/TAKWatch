@@ -1,6 +1,6 @@
-package com.atakmap.android.selfmarkerdata.plugin;
+package pl.tdf.atak.TAKWatch.plugin;
 
-import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME;
+import static pl.tdf.atak.TAKWatch.PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

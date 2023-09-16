@@ -1,10 +1,10 @@
-package com.atakmap.android.selfmarkerdata.plugin;
+package pl.tdf.atak.TAKWatch.plugin;
 
 
 import com.atak.plugins.impl.AbstractPlugin;
 import gov.tak.api.plugin.IServiceController;
 import com.atak.plugins.impl.PluginContextProvider;
-import com.atakmap.android.selfmarkerdata.SelfMarkerDataMapComponent;
+import pl.tdf.atak.TAKWatch.SelfMarkerDataMapComponent;
 
 
 /**

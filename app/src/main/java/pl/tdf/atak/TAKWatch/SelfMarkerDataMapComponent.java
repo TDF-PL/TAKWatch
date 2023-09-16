@@ -1,5 +1,5 @@
 
-package com.atakmap.android.selfmarkerdata;
+package pl.tdf.atak.TAKWatch;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -9,9 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.PreferenceScreen;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -32,17 +30,15 @@ import com.atakmap.android.maps.MapEventDispatcher;
 import com.atakmap.android.maps.MapItem;
 import com.atakmap.android.maps.MapView;
 import com.atakmap.android.maps.PointMapItem;
-import com.atakmap.android.preference.AtakPreferenceFragment;
 import com.atakmap.android.routes.Route;
-import com.atakmap.android.routes.RouteMapReceiver;
-import com.atakmap.android.selfmarkerdata.debouncer.MessageDebouncer;
-import com.atakmap.android.selfmarkerdata.plugin.HeartRatePreferenceFragment;
-import com.atakmap.android.selfmarkerdata.plugin.R;
-import com.atakmap.android.selfmarkerdata.plugin.TAKWatchConst;
-import com.atakmap.android.selfmarkerdata.radialmenu.RadialMenuDetailsExtender;
+
+import pl.tdf.atak.TAKWatch.debouncer.MessageDebouncer;
+import pl.tdf.atak.TAKWatch.plugin.HeartRatePreferenceFragment;
+import pl.tdf.atak.TAKWatch.plugin.TAKWatchConst;
+import pl.tdf.atak.TAKWatch.radialmenu.RadialMenuDetailsExtender;
+
+import pl.tdf.atak.TAKWatch.plugin.R;
 import com.atakmap.app.SettingsActivity;
-import com.atakmap.app.preferences.PreferenceManagementFragment;
-import com.atakmap.app.preferences.PreferenceSearchDialog;
 import com.atakmap.app.preferences.ToolsPreferenceFragment;
 import com.atakmap.comms.CommsMapComponent;
 import com.atakmap.comms.ReportingRate;
@@ -64,14 +60,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import gov.tak.api.util.Disposable;
 import gov.tak.api.widgets.IMapWidget;
 import gov.tak.platform.ui.MotionEvent;
 
-import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_AUTOLAUNCH;
-import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME;
-import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_SYNC_RANGE;
-import static com.atakmap.android.selfmarkerdata.PreferenceKeys.PREFERENCE_KEY_TIMERANGE;
 import static com.garmin.android.connectiq.IQApp.IQAppStatus.INSTALLED;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
@@ -81,7 +72,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
     private static final String TAG = "SelfMarkerDataMapCompon";
     private static final String COMM_WATCH_ID = "a3421feed289106a538cb9547ab12095";
-    public static final String OPEN_PREFERENCES_ACTION = "com.atakmap.android.selfmarkerdata.plugin.openPreferences";
+    public static final String OPEN_PREFERENCES_ACTION = "pl.tdf.atak.TAKWatch.plugin.openPreferences";
 
     private final List<Integer> heartBeatsValues = new ArrayList<>();
 
@@ -179,7 +170,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         if (target instanceof PointMapItem) {
             GeoPoint me = view.getSelfMarker().getPoint();
             double distance = me.distanceTo(((PointMapItem) target).getPoint());
-            Integer configuredDistance = Integer.valueOf(sharedPref.getString(PREFERENCE_KEY_SYNC_RANGE, "1000"));
+            Integer configuredDistance = Integer.valueOf(sharedPref.getString(PreferenceKeys.PREFERENCE_KEY_SYNC_RANGE, "1000"));
 
             if (configuredDistance != 0 && distance > configuredDistance) return;
 
@@ -256,7 +247,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
 
             myApp = new IQApp(COMM_WATCH_ID);
 
-            Boolean openApp = sharedPref.getBoolean(PREFERENCE_KEY_AUTOLAUNCH, false);
+            Boolean openApp = sharedPref.getBoolean(PreferenceKeys.PREFERENCE_KEY_AUTOLAUNCH, false);
 
             if (openApp) {
                 try {
@@ -341,7 +332,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         
         int timeRange;
         try {
-            String timeRangeString = sharedPref.getString(PREFERENCE_KEY_TIMERANGE, "60");
+            String timeRangeString = sharedPref.getString(PreferenceKeys.PREFERENCE_KEY_TIMERANGE, "60");
             timeRange = parseInt(timeRangeString);
         } catch (Exception e) {
             timeRange = 60;
@@ -380,8 +371,8 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this.view.getContext());
 
             sharedPref.registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
-                String sharedPrefString = sharedPref.getString(PREFERENCE_KEY_DEVICE_NAME, null);
-                if (key.equals(PREFERENCE_KEY_DEVICE_NAME)) {
+                String sharedPrefString = sharedPref.getString(PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME, null);
+                if (key.equals(PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME)) {
                     Log.d(TAG, "device preference changed to " + sharedPrefString);
                     loadAppMessages();
                     initializeDevice(devices, sharedPref);
@@ -434,7 +425,7 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
         });
     }
     private void initializeDevice(List<IQDevice> devices, SharedPreferences sharedPref) {
-        String deviceNameFromPreferences = sharedPref.getString(PREFERENCE_KEY_DEVICE_NAME, null);
+        String deviceNameFromPreferences = sharedPref.getString(PreferenceKeys.PREFERENCE_KEY_DEVICE_NAME, null);
         Log.d(TAG, "Value from preferences: " + deviceNameFromPreferences);
 
         if (deviceNameFromPreferences != null) {

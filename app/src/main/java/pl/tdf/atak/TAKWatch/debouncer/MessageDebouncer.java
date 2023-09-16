@@ -1,4 +1,4 @@
-package com.atakmap.android.selfmarkerdata.debouncer;
+package pl.tdf.atak.TAKWatch.debouncer;
 
 import java.util.List;
 
