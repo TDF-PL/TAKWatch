@@ -460,6 +460,12 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
             if (_target == null) return;
 
             MapItem mi = view.getMapItem(_target.getUID());
+            if (mi.getType().equals("b-m-r")) {
+                Route r = (Route) mi;
+                sendRouteToWatch(r);
+                return;
+            }
+
             AlertDialog.Builder alertBuilder = new AlertDialog.Builder(view.getContext());
             alertBuilder.setTitle("TAK Watch ");
             alertBuilder.setMessage("Please select the desired action.");
@@ -468,22 +474,16 @@ public class SelfMarkerDataMapComponent extends AbstractMapComponent {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     MapItem mi = view.getMapItem(_target.getUID());
-                    if (mi.getType().equals("b-m-r")) {
-                        Route r = (Route)mi;
-                        sendRouteToWatch(r);
-                    } else {
-                        sendMarkerToWatch(mi);
-                        drawVectorOnWatch(_target.getUID());
-                    }
-            }});
+                    sendMarkerToWatch(mi);
+                    drawVectorOnWatch(_target.getUID());
 
-            if (!mi.getType().equals("b-m-r"))
+                 }});
+
                 alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Save on watch",new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     MapItem mi = view.getMapItem(_target.getUID());
                     storeWaypointOnWatch(mi);
-
                 }
             });
             alertDialog.setCancelable(true);
