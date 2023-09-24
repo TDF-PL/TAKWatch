@@ -9,7 +9,7 @@ import android.content.Context;
  */
 public class PluginNativeLoader {
 
-    private static final String TAG = "NativeLoader";
+    private static final String TAG = "TAKWatchNativeLoader";
     private static String ndl = null;
 
     /**

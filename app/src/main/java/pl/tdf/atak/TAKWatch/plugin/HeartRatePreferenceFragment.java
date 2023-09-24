@@ -14,11 +14,13 @@ import com.garmin.android.connectiq.IQDevice;
 import java.util.ArrayList;
 import java.util.List;
 
+import pl.tdf.atak.TAKWatch.WatchClient;
+
 public class HeartRatePreferenceFragment extends PluginPreferenceFragment {
 
     private static Context staticPluginContext;
-    private List<IQDevice> devices;
-    public static final String TAG = "SelfMarkerPreference";
+    private WatchClient watchClient;
+    public static final String TAG = "TAKWatchPreferences";
 
     /**
      * Only will be called after this has been instantiated with the 1-arg constructor.
@@ -29,30 +31,27 @@ public class HeartRatePreferenceFragment extends PluginPreferenceFragment {
     }
 
     @SuppressLint("ValidFragment")
-    public HeartRatePreferenceFragment(final Context pluginContext) {
+    public HeartRatePreferenceFragment(final Context pluginContext, WatchClient watchClient) {
         super(pluginContext, R.xml.preferences);
         staticPluginContext = pluginContext;
+        this.watchClient = watchClient;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PanListPreference selectInput = (PanListPreference) findPreference(PREFERENCE_KEY_DEVICE_NAME);
-        Log.d(TAG, "Select input initialized" + selectInput);
-        List<String> friendlyNames = new ArrayList<>();
+        List<IQDevice> devices = watchClient.getDevices();
 
+        List<String> friendlyNames = new ArrayList<>();
         Log.d(TAG, "Available devices " + devices.size());
         for (IQDevice d : devices) {
             friendlyNames.add(d.getFriendlyName());
         }
         String[] entries = friendlyNames.toArray(new String[0]);
+
+        PanListPreference selectInput = (PanListPreference) findPreference(PREFERENCE_KEY_DEVICE_NAME);
         selectInput.setEntries(entries);
         selectInput.setEntryValues(entries);
-    }
-
-    public void setDevices(List<IQDevice> devices) {
-        Log.d(TAG, "Setting devices");
-        this.devices = devices;
     }
 }

@@ -1,6 +1,6 @@
 package pl.tdf.atak.TAKWatch.plugin;
 
-import static pl.tdf.atak.TAKWatch.SelfMarkerDataMapComponent.OPEN_PREFERENCES_ACTION;
+import static pl.tdf.atak.TAKWatch.plugin.TAKWatchConst.OPEN_PREFERENCES_ACTION;
 
 import android.content.Context;
 
