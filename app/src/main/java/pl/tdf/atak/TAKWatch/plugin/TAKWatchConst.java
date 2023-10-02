@@ -19,6 +19,8 @@ public class TAKWatchConst {
             "a-h-G",
             "a-u-G",
             "b-m-p-s-p-i",
-            "a-f-G-U-C"
+            "a-f-G-U-C",
+            "a-f-G-U",
+            "a-f-G-E-V-C"
     });
 }
