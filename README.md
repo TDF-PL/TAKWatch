@@ -34,5 +34,7 @@ TAKWatch is an ATAK plugin that communicates with Garmin devices running TAKWatc
 - fēnix® 7X / tactix® 7 / quatix® 7X Solar / Enduro™ 2
 - fēnix® 7X Pro
 
+## Releases
 
+https://github.com/TDF-PL/TAKWatch/releases
 
