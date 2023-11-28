@@ -18,7 +18,8 @@ import java.util.List;
 public class WatchClient {
 
     private static final String TAG = "TAKWatchWatchClient";
-    private static final String COMM_WATCH_ID = "a3421feed289106a538cb9547ab12095";
+    private static final String COMM_WATCH_ID = "95a20b8fa30c47a79fc91ada1f452ba2";
+
     private IQApp myApp;
     private IQDevice selectedDevice;
     private static ConnectIQ connectIQ;

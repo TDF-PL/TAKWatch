@@ -8,6 +8,6 @@ public class PreferenceKeys {
 
     public static final String PREFERENCE_KEY_AUTOLAUNCH = "TAKWatchPreferencesAutoLaunchWatchApp";
 
-    
+
     public static final String PREFERENCE_KEY_AUTOWIPE = "TAKWatchPreferencesAutoWipeWhenNoHR";
 }
