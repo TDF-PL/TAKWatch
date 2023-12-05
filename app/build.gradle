@@ -13,7 +13,7 @@ buildscript {
 
     def takdevVersion = '2.+'
 
-    def getValueFromPropertiesFile = { propFile, key ->
+    ext.getValueFromPropertiesFile = { propFile, key ->
         if(!propFile.isFile() || !propFile.canRead())
             return null
         def prop = new Properties()
@@ -83,6 +83,10 @@ allprojects {
 apply plugin: 'com.android.application'
 apply plugin: 'atak-takdev-plugin'
 
+def getMinorVersion() {
+    List takVersion = ATAK_VERSION.tokenize('.')*.toInteger()
+    return takVersion[1]
+}
 
 def supportedFlavors =
 [
@@ -134,17 +138,36 @@ android {
 
     signingConfigs {
         debug {
-            storeFile file("${buildDir}/android_keystore")
-            storePassword "tnttnt"
-            keyAlias "wintec_mapping"
-            keyPassword "tnttnt"
+            def kf = getValueFromPropertiesFile(project.rootProject.file('local.properties'), 'takDebugKeyFile')
+            def kfp = getValueFromPropertiesFile(project.rootProject.file('local.properties'), 'takDebugKeyFilePassword')
+            def ka = getValueFromPropertiesFile(project.rootProject.file('local.properties'), 'takDebugKeyAlias')
+            def kp = getValueFromPropertiesFile(project.rootProject.file('local.properties'), 'takDebugKeyPassword')
+
+            if (kf == null) {
+                throw new GradleException("No signing key configured!")
+            }
+
+            storeFile file(kf)
+            if (kfp != null) storePassword kfp
+            if (ka != null) keyAlias ka
+            if (kp != null) keyPassword kp
         }
         release {
-            storeFile file("${buildDir}/android_keystore")
-            storePassword "tnttnt"
-            keyAlias "wintec_mapping"
-            keyPassword "tnttnt"
+            def kf = getValueFromPropertiesFile(project.rootProject.file('local.properties'), 'takReleaseKeyFile')
+            def kfp = getValueFromPropertiesFile(project.rootProject.file('local.properties'), 'takReleaseKeyFilePassword')
+            def ka = getValueFromPropertiesFile(project.rootProject.file('local.properties'), 'takReleaseKeyAlias')
+            def kp = getValueFromPropertiesFile(project.rootProject.file('local.properties'), 'takReleaseKeyPassword')
+
+            if (kf == null) {
+                throw new GradleException("No signing key configured!")
+            }
+
+            storeFile file(kf)
+            if (kfp != null) storePassword kfp
+            if (ka != null) keyAlias ka
+            if (kp != null) keyPassword kp
         }
+
     }
 
     buildTypes {
@@ -195,8 +218,30 @@ android {
     }
 
     sourceSets {
-        main {
+        civ {
+            java {
+                // If the minor version is less that 9 then use the older code base, otherwise the newer code base
+                if (getMinorVersion() < 9) {
+                    println("--- Pre-4.9 Code Base")
+                    srcDirs('src/civ48/java')
+                } else {
+                    println("--- Post-4.9 Code Base")
+                    srcDirs('src/civ49/java')
+                }
+            }
+            assets {
+                // If the minor version is less that 9 then use the older code base, otherwise the newer code base
+                if (getMinorVersion() < 9) {
+                    println("--- Pre-4.9 Code Base")
+                    srcDirs 'src/civ48/assets'
+                } else {
+                    println("--- Post-4.9 Code Base")
+                    srcDirs 'src/civ49/assets'
+                }
+            }
+        }
 
+        main {
             // It is strongly encouraged that plugin developers do not modify the archiveBaseName, version code logic and version
             // name logic to provide for consistency within the community.
             setProperty("archivesBaseName", "ATAK-Plugin-" + rootProject.name + "-" + PLUGIN_VERSION + "-" + getVersionName() + "-" + ATAK_VERSION)
@@ -204,9 +249,6 @@ android {
             defaultConfig.versionName = PLUGIN_VERSION + " (" + getVersionName() + ") - [" + ATAK_VERSION + "]"
         }
 
-        gov.java.srcDirs 'src/gov/java'
-        gov.assets.srcDir 'src/gov/assets'
-        gov.res.srcDir 'src/gov/res'
 
         // Move the build types to build-types/<type>
         // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...

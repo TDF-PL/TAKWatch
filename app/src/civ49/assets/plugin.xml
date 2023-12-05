@@ -4,7 +4,7 @@
 
     <extension
         type="gov.tak.api.plugin.IPlugin"
-        impl="pl.tdf.atak.TAKWatch.plugin.PluginTemplateLifecycle"
+        impl="pl.tdf.atak.TAKWatch.plugin.TAKWatchLifecycle"
         singleton="true" />
 
 </plugin>
