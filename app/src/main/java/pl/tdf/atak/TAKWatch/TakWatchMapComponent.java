@@ -61,6 +61,7 @@ import pl.tdf.atak.TAKWatch.plugin.R;
 import pl.tdf.atak.TAKWatch.plugin.TAKWatchConst;
 import pl.tdf.atak.TAKWatch.radialmenu.RadialMenuDetailsExtender;
 import pl.tdf.atak.TAKWatch.statushb.StatusHeartBeatTask;
+import pl.tdf.atak.TAKWatch.statushb.UpdateMarkerStatusTask;
 
 import static java.lang.Integer.parseInt;
 import static pl.tdf.atak.TAKWatch.heartrate.HeartRateCodHandler.HEART_RATE_COD_KEY;
@@ -98,6 +99,7 @@ public class TakWatchMapComponent extends AbstractMapComponent {
     private WatchClient watchClient;
 
     private Timer heartBeatConnectionStatusTimer;
+    private Timer updateMarkersStatusTimer;
     private final ConnectIQ.IQApplicationEventListener mapEventsListener = (iqDevice, iqApp, messages, iqMessageStatus) -> {
         if (messageDebouncer.alreadyHandled(messages)) {
             Log.d(TAG, "onMessageReceived - message '" + messages + "' already handled skipping: ");
@@ -464,6 +466,7 @@ public class TakWatchMapComponent extends AbstractMapComponent {
             }
         });
         registerStatusHeartBeat();
+        registerUpdateMarkersCheck();
     }
 
     @Override
@@ -477,6 +480,7 @@ public class TakWatchMapComponent extends AbstractMapComponent {
 
         AtakBroadcast.getInstance().unregisterReceiver(openPreferencesReceiver);
         unregisterStatusHeartBeat();
+        unregisterUpdateMarkersCheck();
     }
 
     private void registerStatusHeartBeat() {
@@ -491,6 +495,21 @@ public class TakWatchMapComponent extends AbstractMapComponent {
         if (heartBeatConnectionStatusTimer != null) {
             heartBeatConnectionStatusTimer.purge();
             heartBeatConnectionStatusTimer.cancel();
+        }
+    }
+
+    private void registerUpdateMarkersCheck() {
+        Log.d(TAG, "Registering update marker timer");
+        UpdateMarkerStatusTask task = new UpdateMarkerStatusTask(this::sendAllMarkersToWatch, sharedPref);
+        updateMarkersStatusTimer = new Timer();
+        updateMarkersStatusTimer.schedule(task, 5000, 5000);
+    }
+
+    private void unregisterUpdateMarkersCheck() {
+        Log.d(TAG, "Unregistering update marker timer");
+        if (updateMarkersStatusTimer != null) {
+            updateMarkersStatusTimer.purge();
+            updateMarkersStatusTimer.cancel();
         }
     }
 }
