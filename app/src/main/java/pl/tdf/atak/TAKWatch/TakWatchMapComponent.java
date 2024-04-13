@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Timer;
 
 import gov.tak.api.widgets.IMapWidget;
 import gov.tak.platform.ui.MotionEvent;
@@ -59,6 +60,7 @@ import pl.tdf.atak.TAKWatch.plugin.HeartRatePreferenceFragment;
 import pl.tdf.atak.TAKWatch.plugin.R;
 import pl.tdf.atak.TAKWatch.plugin.TAKWatchConst;
 import pl.tdf.atak.TAKWatch.radialmenu.RadialMenuDetailsExtender;
+import pl.tdf.atak.TAKWatch.statushb.StatusHeartBeatTask;
 
 import static java.lang.Integer.parseInt;
 import static pl.tdf.atak.TAKWatch.heartrate.HeartRateCodHandler.HEART_RATE_COD_KEY;
@@ -94,6 +96,8 @@ public class TakWatchMapComponent extends AbstractMapComponent {
     private long lastBroadcasted = System.currentTimeMillis();
 
     private WatchClient watchClient;
+
+    private Timer heartBeatConnectionStatusTimer;
     private final ConnectIQ.IQApplicationEventListener mapEventsListener = (iqDevice, iqApp, messages, iqMessageStatus) -> {
         if (messageDebouncer.alreadyHandled(messages)) {
             Log.d(TAG, "onMessageReceived - message '" + messages + "' already handled skipping: ");
@@ -459,6 +463,7 @@ public class TakWatchMapComponent extends AbstractMapComponent {
                 watchClient.reload();
             }
         });
+        registerStatusHeartBeat();
     }
 
     @Override
@@ -471,5 +476,21 @@ public class TakWatchMapComponent extends AbstractMapComponent {
         watchClient.cleanup();
 
         AtakBroadcast.getInstance().unregisterReceiver(openPreferencesReceiver);
+        unregisterStatusHeartBeat();
+    }
+
+    private void registerStatusHeartBeat() {
+        Log.d(TAG, "Registering status heart beat timer");
+        StatusHeartBeatTask task = new StatusHeartBeatTask(watchClient);
+        heartBeatConnectionStatusTimer = new Timer();
+        heartBeatConnectionStatusTimer.schedule(task, 5000, 5000);
+    }
+
+    private void unregisterStatusHeartBeat() {
+        Log.d(TAG, "Unregistering status heart beat timer");
+        if (heartBeatConnectionStatusTimer != null) {
+            heartBeatConnectionStatusTimer.purge();
+            heartBeatConnectionStatusTimer.cancel();
+        }
     }
 }
