@@ -7,10 +7,11 @@ TAKWatch is an ATAK plugin that communicates with Garmin devices running TAKWatc
 - Sending heart rate to ATAK
 - Receiving waypoints from ATAK (persisted on the watch)
 - Receiving markers from ATAK (not persisted on the watch)
-- Triggering Emergency alert from watch (when SELECT button clicked 5 times quickly)
-- Synchronizing visible map area on the watch with visible map area in ATAK
+- Triggering Emergency alert from watch (when SELECT button pressed 5 times rapidly)
 - Creating vectors to markers
 - Sending routes from ATAK to watch
+- Sending chat messages
+- Triggering ATAK wipe from watch (when BACK button pressed 5 times rapidly)
 
 ## Equipment supported
 - epix™ (Gen 2) / quatix® 7 Sapphire
@@ -35,5 +36,7 @@ TAKWatch is an ATAK plugin that communicates with Garmin devices running TAKWatc
 - fēnix® 7X / tactix® 7 / quatix® 7X Solar / Enduro™ 2
 - fēnix® 7X Pro
 
+## Releases
 
+https://github.com/TDF-PL/TAKWatch/releases
 
