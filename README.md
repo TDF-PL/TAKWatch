@@ -1,5 +1,7 @@
 # TAKWatch
 
+<img src="https://raw.githubusercontent.com/TDF-PL/TAKWatch-IQ/main/images/screenshot-2.jpeg" width="200" height="200">
+
 ## Description
 TAKWatch is an ATAK plugin that communicates with Garmin devices running TAKWatch-IQ (https://github.com/TDF-PL/TAKWatch-IQ) application.
 
@@ -35,6 +37,12 @@ TAKWatch is an ATAK plugin that communicates with Garmin devices running TAKWatc
 - fēnix® 7S
 - fēnix® 7X / tactix® 7 / quatix® 7X Solar / Enduro™ 2
 - fēnix® 7X Pro
+
+## Screenshots
+
+<img src="https://raw.githubusercontent.com/TDF-PL/TAKWatch-IQ/main/images/screenshot-1.png" width="200" height="200">
+<img src="https://raw.githubusercontent.com/TDF-PL/TAKWatch-IQ/main/images/screenshot-3.jpeg" width="200" height="200">
+
 
 ## Releases
 
