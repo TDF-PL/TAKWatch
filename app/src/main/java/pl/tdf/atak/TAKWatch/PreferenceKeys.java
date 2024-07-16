@@ -10,4 +10,5 @@ public class PreferenceKeys {
 
 
     public static final String PREFERENCE_KEY_AUTOWIPE = "TAKWatchPreferencesAutoWipeWhenNoHR";
+    public static final String PREFERENCE_KEY_ENABLE_WIPE = "TAKWatchPreferencesEnableWipe";
 }

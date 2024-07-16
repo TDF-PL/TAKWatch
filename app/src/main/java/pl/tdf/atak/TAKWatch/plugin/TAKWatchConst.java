@@ -9,6 +9,7 @@ public class TAKWatchConst {
     public static final String DETAILS_META_KEY_AVG_HEART_RATE = "TAKWatchPlugin.averageHeartRate";
     public static final String DETAILS_META_KEY_TIME_RANGE = "TAKWatchPlugin.timeRange";
     public static final String DETAILS_META_KEY_LAST_UPDATED = "TAKWatchPlugin.lastUpdated";
+    public static final String DETAILS_META_KEY_WATCH_BATTERY = "TAKWatchPlugin.watchBattery";
 
     public static final String OPEN_PREFERENCES_ACTION = "pl.tdf.atak.TAKWatch.plugin.openPreferences";
 

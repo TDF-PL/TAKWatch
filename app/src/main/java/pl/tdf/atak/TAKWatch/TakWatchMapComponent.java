@@ -64,11 +64,13 @@ import pl.tdf.atak.TAKWatch.statushb.StatusHeartBeatTask;
 import pl.tdf.atak.TAKWatch.statushb.UpdateMarkerStatusTask;
 
 import static java.lang.Integer.parseInt;
+import static pl.tdf.atak.TAKWatch.PreferenceKeys.PREFERENCE_KEY_ENABLE_WIPE;
 import static pl.tdf.atak.TAKWatch.heartrate.HeartRateCodHandler.HEART_RATE_COD_KEY;
 import static pl.tdf.atak.TAKWatch.plugin.TAKWatchConst.DETAILS_META_KEY_AVG_HEART_RATE;
 import static pl.tdf.atak.TAKWatch.plugin.TAKWatchConst.DETAILS_META_KEY_LAST_UPDATED;
 import static pl.tdf.atak.TAKWatch.plugin.TAKWatchConst.DETAILS_META_KEY_MAX_HEART_RATE;
 import static pl.tdf.atak.TAKWatch.plugin.TAKWatchConst.DETAILS_META_KEY_TIME_RANGE;
+import static pl.tdf.atak.TAKWatch.plugin.TAKWatchConst.DETAILS_META_KEY_WATCH_BATTERY;
 import static pl.tdf.atak.TAKWatch.plugin.TAKWatchConst.OPEN_PREFERENCES_ACTION;
 import static pl.tdf.atak.TAKWatch.radialmenu.RadialMenuDetailsExtenderAlert.createOnPressDialog;
 
@@ -187,13 +189,18 @@ public class TakWatchMapComponent extends AbstractMapComponent {
     }
 
     private void wipeWatch() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(view.getContext());
+
+        if (!prefs.getBoolean(PREFERENCE_KEY_ENABLE_WIPE, false)) {
+            Log.d(TAG, "Wipe not allowed in the preferences. Skipping.");
+            return;
+        }
+
         Thread.currentThread().setName(TAG);
 
         // work to be performed by background thread
         Log.d(TAG, "Executing...");
 
-        SharedPreferences prefs = PreferenceManager
-                .getDefaultSharedPreferences(view.getContext());
         prefs.edit().putBoolean("clearingContent", true).apply();
 
         //close dropdowns/tools
@@ -377,7 +384,7 @@ public class TakWatchMapComponent extends AbstractMapComponent {
         cd.setAttribute(DETAILS_META_KEY_AVG_HEART_RATE, averageHeartRate + "");
         cd.setAttribute(DETAILS_META_KEY_LAST_UPDATED, nowString);
         cd.setAttribute(DETAILS_META_KEY_TIME_RANGE, timeRange + "");
-        cd.setAttribute("watchBattery", battery);
+        cd.setAttribute(DETAILS_META_KEY_WATCH_BATTERY, battery);
 
         if (healthDetail != null) {
             healthDetail.toItemMetadata(view.getSelfMarker(), null, cd);
