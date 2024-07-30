@@ -27,7 +27,7 @@ import gov.tak.api.widgets.IMapWidget;
 public class RadialMenuDetailsExtenderFactory implements MapMenuFactory {
 
     private static final String TAG = "TAKWatchMenuFactory";
-    private static final String BUTTON_ASSET_NAME = "takwatch-radial-menu-btn.png";
+    private static final String BUTTON_ASSET_NAME = "assets/takwatch-radial-menu-btn.png";
 
     private final Context pluginContext;
     private final Context mapContext;
