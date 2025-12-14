@@ -1,0 +1,244 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// PLUGIN_VERSION is the common version name when describing the plugin.
+// ATAK_VERSION   is for the version of ATAK this plugin should be compatible
+//                with some examples include 3.11.0, 3.11.0.civ 3.11.1.fvey
+//
+////////////////////////////////////////////////////////////////////////////////
+
+buildscript {
+
+    ext.PLUGIN_VERSION = "1.0"
+    ext.ATAK_VERSION = "4.10.0"
+
+    def takdevVersion = '2.+'
+
+    def getValueFromPropertiesFile = { propFile, key ->
+        if(!propFile.isFile() || !propFile.canRead())
+            return null
+        def prop = new Properties()
+        def reader = propFile.newReader()
+        try {
+            prop.load(reader)
+        } finally {
+            reader.close()
+        }
+        return prop.get(key)
+    }
+
+    def getProperty = { name, defValue ->
+        def prop = project.properties[name] ?:
+                getValueFromPropertiesFile(project.rootProject.file('local.properties'), name)
+        return (null == prop) ? defValue : prop
+    }
+
+    def urlKey = 'takrepo.url'
+
+    ext.isDevKitEnabled = { ->
+        return getProperty(urlKey, null) != null
+    }
+
+    ext.takrepoUrl = getProperty(urlKey, 'https://localhost/')
+    ext.takrepoUser = getProperty('takrepo.user', 'invalid')
+    ext.takrepoPassword = getProperty('takrepo.password', 'invalid')
+    ext.takdevPlugin = getProperty('takdev.plugin', "${rootDir}/../../atak-gradle-takdev.jar")
+
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()
+        maven {
+            url "https://jitpack.io"
+        }
+        maven {
+            url = takrepoUrl
+            credentials {
+                username = takrepoUser
+                password = takrepoPassword
+            }
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+        if(isDevKitEnabled()) {
+            classpath "com.atakmap.gradle:atak-gradle-takdev:${takdevVersion}"
+        } else {
+            classpath files(takdevPlugin)
+        }
+    }
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+        google()
+        mavenCentral()
+        mavenLocal()
+        maven {
+            url "https://jitpack.io"
+        }
+    }
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'atak-takdev-plugin'
+
+
+def supportedFlavors =
+[
+    [ name : 'civ', default: true ],
+    [ name : 'mil' /** example: true **/],
+    [ name : 'aus' ],
+    [ name : 'nzl' ],
+    [ name : 'prt' ],
+    [ name : 'nor' ],
+    [ name : 'swe' ],
+    [ name : 'gbr' ],
+    [ name : 'can' ],
+    [ name : 'hun' ],
+    [ name : 'bel' ],
+    [ name : 'est' ],
+    [ name : 'ltu' ],
+    [ name : 'ukr' ],
+    [ name : 'pol' ],
+    [ name : 'nld' ],
+    [ name : 'esp' ],
+    [ name : 'aeronet' ],
+    [ name : 'gov' ],
+    [ name : 'natosof' ],
+]
+
+android {
+    compileSdkVersion 33
+    buildToolsVersion "30.0.3"
+
+    bundle {
+        storeArchive {
+            enable = false
+        }
+    }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
+    lintOptions {
+        checkReleaseBuilds true
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        warning 'ExpiredTargetSdkVersion'
+        abortOnError true
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file("${buildDir}/android_keystore")
+            storePassword "tnttnt"
+            keyAlias "wintec_mapping"
+            keyPassword "tnttnt"
+        }
+        release {
+            storeFile file("${buildDir}/android_keystore")
+            storePassword "tnttnt"
+            keyAlias "wintec_mapping"
+            keyPassword "tnttnt"
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            matchingFallbacks = ['sdk']
+        }
+        release {
+            minifyEnabled true
+            proguardFile 'proguard-gradle.txt'
+            signingConfig signingConfigs.release
+            matchingFallbacks = ['odk']
+        }
+    }
+
+    flavorDimensions "application"
+
+    productFlavors {
+        supportedFlavors.each { flav ->
+            "${flav.name}" {
+                getIsDefault().set(flav.name.equals("${flav.default}".toString()))
+                dimension "application"
+
+                // retain existing application identifiers for civ and mil
+                if (!flav.name.equals("civ") && !flav.name.equals("mil")) {
+                     applicationIdSuffix = ".${flav.name}"
+                }
+                // resolve CIV dependency if flavor specific dependency is not available
+                matchingFallbacks = ['civ']
+
+                // set the api version information
+                def pluginApiFlavor = flav.name.equals('gov') ? 'CIV' : "${flav.name.toUpperCase()}"
+                manifestPlaceholders = [atakApiVersion: "com.atakmap.app@" + ATAK_VERSION + ".${pluginApiFlavor}"]
+
+                // additional variables associated with the flav can be set here once defined above
+                // buildConfigField 'boolean', 'EXAMPLE', "${flav.example}"
+            }
+        }
+         // additional variables associated with all flavors can be set here
+         applicationVariants.all { variant ->
+             variant.resValue "string", "versionName", variant.versionName
+             buildConfigField 'String', 'ATAK_PACKAGE_NAME', '"com.atakmap.app.civ"'
+        }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/INDEX.LIST'
+    }
+
+    sourceSets {
+        main {
+
+            // It is strongly encouraged that plugin developers do not modify the archiveBaseName, version code logic and version
+            // name logic to provide for consistency within the community.
+            setProperty("archivesBaseName", "ATAK-Plugin-" + rootProject.name + "-" + PLUGIN_VERSION + "-" + getVersionName() + "-" + ATAK_VERSION)
+            defaultConfig.versionCode = getVersionCode()
+            defaultConfig.versionName = PLUGIN_VERSION + " (" + getVersionName() + ") - [" + ATAK_VERSION + "]"
+        }
+
+        gov.java.srcDirs 'src/gov/java'
+        gov.assets.srcDir 'src/gov/assets'
+        gov.res.srcDir 'src/gov/res'
+
+        // Move the build types to build-types/<type>
+        // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
+        // This moves them out of them default location under src/<type>/... which would
+        // conflict with src/ being used by the main source set.
+        // Adding new build types or product flavors should be accompanied
+        // by a similar customization.
+        debug.setRoot('build-types/debug')
+        release.setRoot('build-types/release')
+
+    }
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 33
+
+        def runTasks = gradle.startParameter.taskNames
+        if(runTasks.toString().contains('bundle')) {
+            ndk {
+                abiFilters "armeabi-v7a", "arm64-v8a"
+            }
+        } else {
+            ndk {
+                abiFilters "armeabi-v7a", "arm64-v8a", "x86"
+            }
+        }
+    }
+}
+
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: '*.jar')
+    implementation("com.garmin.connectiq:ciq-companion-app-sdk:2.0.3@aar")
+}
+

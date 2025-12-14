@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.atakmap.android.gui.PanListPreference
+        android:key="TAKWatchPreferencesDeviceName"
+        android:summary="Select device from the list below"
+        android:title="Select device"
+        />
+
+    <com.atakmap.android.gui.PanEditTextPreference
+        android:key="TAKWatchPreferencesTimeRange"
+        android:defaultValue="60"
+        android:dialogTitle="Send broadcast interval in seconds"
+        android:inputType="number"
+        android:numeric="integer"
+        android:summary="Send broadcast interval in seconds"
+        android:title="Send broadcast interval" />
+
+    <com.atakmap.android.gui.PanCheckBoxPreference
+        android:key="TAKWatchPreferencesAutoLaunchWatchApp"
+        android:summary="Automatically start watch app"
+        android:title="Start watch app"
+        />
+
+    <com.atakmap.android.gui.PanListPreference
+        android:key="TAKWatchPreferencesSyncRange"
+        android:summary="TAKWatch will sync objects with watch in this radius"
+        android:title="Sync radius"
+        android:defaultValue="1000"
+        android:entries="@array/SyncRangeEntries"
+        android:entryValues="@array/SyncRangeValues"
+        />
+
+    <com.atakmap.android.gui.PanSwitchPreference
+        android:defaultValue="false"
+        android:key="TAKWatchPreferencesEnableWipe"
+        android:summary="When enabled device will be wiped after receiving wipe message from the watch"
+        android:title="Enable device wipe" />
+
+
+</PreferenceScreen>
