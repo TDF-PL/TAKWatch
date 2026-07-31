@@ -5,6 +5,42 @@
 ## Description
 TAKWatch is an ATAK plugin that communicates with Garmin devices running TAKWatch-IQ (https://github.com/TDF-PL/TAKWatch-IQ) application.
 
+## Build the APK
+
+TAKWatch is an ATAK plugin, not a standalone Android application. Building it requires:
+
+- JDK 17 (JDK 8 is not supported by Android Gradle Plugin 7.4.2)
+- Android SDK platform 33
+- Android build tools 30.0.3
+- The ATAK 4.10.0 CIV plugin development kit
+- Garmin Connect IQ Android SDK 2.0.3 (the AAR dependency is already declared in `app/build.gradle`)
+
+The ATAK Gradle plugin must be available either as a local JAR or through an ATAK Maven repository. By default, the project looks for the JAR at `../../atak-gradle-takdev.jar` relative to the project root. Alternatively, create `local.properties` in the project root and configure the ATAK repository:
+
+```properties
+takrepo.url=https://your-atak-maven-repository/
+takrepo.user=your-username
+takrepo.password=your-password
+```
+
+With the required tools configured, run the CIV debug build from the project root:
+
+```bat
+gradlew.bat assembleCivDebug
+```
+
+For a release APK, run:
+
+```bat
+gradlew.bat assembleCivRelease
+```
+
+The generated APK is written below `app\build\outputs\apk\`. The exact filename includes the plugin version, ATAK version, flavor, and build type.
+
+Install the resulting APK through ATAK's plugin installer or copy it to the target device and open it with ATAK. It must be installed on a device that has a compatible ATAK CIV version; it is not launched as a normal standalone app.
+
+If the ATAK Dev Kit is not installed, Gradle fails with `Plugin with id 'atak-takdev-plugin' not found`. The repository's existing release APK can be downloaded from the [v1.0.0 release](https://github.com/TDF-PL/TAKWatch/releases/tag/v1.0.0).
+
 ## Features
 - Sending heart rate to ATAK
 - Receiving waypoints from ATAK (persisted on the watch)
